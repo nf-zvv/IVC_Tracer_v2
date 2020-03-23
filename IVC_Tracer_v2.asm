@@ -11,16 +11,18 @@
 
 ;------------------------------------------------------------------------------
 
+#define F_CPU (18432000)
+
 ;.device ATmega1284P
 .nolist
 .include "m1284Pdef.inc"
 .include "macro.asm"
 .include "eeprom_macro.asm"
+.include "uart_macro.asm"
 .list
 
 .LISTMAC ; Включить разворачивание макросов
 
-#define F_CPU (18432000)
 
 ; Нулевой регистр
 .ifndef __zero_reg__
@@ -39,6 +41,17 @@
 .equ enc_channel    = 5
 .equ menu_edit      = 6
 .equ change_screen  = 7
+;-------------------------------------------
+.equ UART_IN_FULL   = 0		; Приемный буфер UART полон
+;.equ UART_OUT_FULL  = 1		; Буфер отправки UART полон
+.equ UART_STR_RCV   = 2		; Получена строка по UART
+.equ UART_CR        = 3		; Флаг получения кода CR (0x0D) возврат каретки
+;-------------------------------------------
+
+; Размер приёмного буфера UART (255 max)
+.equ MAXBUFF_IN	 =	64		; Размер входящего буфера
+
+.equ IVC_MAX_RECORDS = 100
 
 ;-------------------------------------------
 ;                 Таймер T0                 |
@@ -88,6 +101,10 @@
 #define Default_RESDIV_KU      6  ; 
 #define Default_ZERO_DAC       2048
 #define Default_VREF_DAC       2048
+#define Default_LIM_VOLT_NEG   0xA628 ; -23000 mV
+#define Default_LIM_VOLT_POS   0x59D8 ;  23000 mV
+#define Default_LIM_CURR_NEG   0xD8F0 ; -10000 mA
+#define Default_LIM_CURR_POS   0x2710 ;  10000 mA
 
 ; Menu
 .equ MAIN_SCREEN_ID        = 0
@@ -109,16 +126,23 @@ E_ACS712_KI:        .dw Default_ACS712_KI
 E_RESDIV_KU:        .dw Default_RESDIV_KU
 E_ZERO_DAC:         .dw Default_ZERO_DAC
 E_VREF_DAC:         .dw Default_VREF_DAC
+E_LIM_VOLT_NEG:		.dw Default_LIM_VOLT_NEG
+E_LIM_VOLT_POS:		.dw Default_LIM_VOLT_POS
+E_LIM_CURR_NEG:		.dw Default_LIM_CURR_NEG
+E_LIM_CURR_POS:		.dw Default_LIM_CURR_POS
+
 ;====================================DATA======================================
 .dseg
 ButtonCounter:	.byte	2	; количество тиков при нажатой кнопке энкодера
 Flags:			.byte	1	; 
+UART_Flags:		.byte	1	; флаги для UART
 ; Блок данных для операций с дисплеем
 DataBlock:		.byte	17	; 
 ; Буферы для преобразования DEC2STR
 STR5:			.byte	5	; 
 STR7:			.byte	7	; 
-
+STRING:			.byte	30
+;------------------------
 DAC_STEP:		.byte	2
 IVC_DAC_START:	.byte	2
 IVC_DAC_END:	.byte	2
@@ -152,7 +176,7 @@ rjmp	RESET
 ;------------------------------------------------------------------------------
 ; Обработчик UART
 ;------------------------------------------------------------------------------
-;.include "uart_irq.asm"
+.include "uart_irq.asm"
 
 ;------------------------------------------------------------------------------
 ;           Прерывание таймера T0 по переполнению
@@ -335,6 +359,10 @@ EEPROM_INIT:
 			EEPROM_WRITE_WORD E_RESDIV_KU,Default_RESDIV_KU
 			EEPROM_WRITE_WORD E_ZERO_DAC,Default_ZERO_DAC
 			EEPROM_WRITE_WORD E_VREF_DAC,Default_VREF_DAC
+			EEPROM_WRITE_WORD E_LIM_VOLT_NEG,Default_LIM_VOLT_NEG
+			EEPROM_WRITE_WORD E_LIM_VOLT_POS,Default_LIM_VOLT_POS
+			EEPROM_WRITE_WORD E_LIM_CURR_NEG,Default_LIM_CURR_NEG
+			EEPROM_WRITE_WORD E_LIM_CURR_POS,Default_LIM_CURR_POS
 			ret
 
 ;------------------------------------------------------------------------------
@@ -352,6 +380,10 @@ EEPROM_RESTORE_VAR:
 			EEPROM_READ_WORD E_RESDIV_KU,RESDIV_KU
 			EEPROM_READ_WORD E_ZERO_DAC,ZERO_DAC
 			EEPROM_READ_WORD E_VREF_DAC,VREF_DAC
+			EEPROM_READ_WORD E_LIM_VOLT_NEG,LIM_VOLT_NEG
+			EEPROM_READ_WORD E_LIM_VOLT_POS,LIM_VOLT_POS
+			EEPROM_READ_WORD E_LIM_CURR_NEG,LIM_CURR_NEG
+			EEPROM_READ_WORD E_LIM_CURR_POS,LIM_CURR_POS
 			ret
 
 ;==============================================================================
@@ -831,6 +863,12 @@ Event_update:
 .include "eeprom.asm"
 .include "math.asm"
 .include "simple_menu.asm"
+
+.include "uart_funcs.asm"
+.include "strings.asm"
+.include "cmd.asm"
+.include "cmd_func.asm"
+
 .include "wait.asm"
 .include "t6963c.asm"
 
