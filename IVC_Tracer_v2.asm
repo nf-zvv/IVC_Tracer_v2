@@ -58,6 +58,7 @@
 ;-------------------------------------------|
 ; время до переполнения таймера в милисекундах
 #define period_T0 1
+#define T0_Clock_Select (1<<CS02)|(0<<CS01)|(0<<CS00)
 ; вычисление начального значения
 #define start_count_T0 (0x100-(period_T0*F_CPU/(256*1000)))
 
@@ -139,8 +140,6 @@ UART_Flags:		.byte	1	; флаги для UART
 ; Блок данных для операций с дисплеем
 DataBlock:		.byte	17	; 
 ; Буферы для преобразования DEC2STR
-STR5:			.byte	5	; 
-STR7:			.byte	7	; 
 STRING:			.byte	30
 ;------------------------
 DAC_STEP:		.byte	2
@@ -163,6 +162,9 @@ LIM_CURR_POS:	.byte	2
 ; Menu
 menu_ID:    	.byte	1 ; идентификатор текущего пункта меню
 screen_ID:  	.byte	1 ; идентификатор текущего экрана
+;------------------------
+IVC_ARRAY:		.byte	2*2*IVC_MAX_RECORDS
+;------------------------
 ;====================================CODE======================================
 .cseg
 .org 0000
@@ -425,12 +427,19 @@ RESET:
 			out		PORTC,r16
 
 			; Port D Init
-			ldi 	r16,0b01100000
+			ldi 	r16,0b01100010
 			out 	DDRD,r16
-			ldi 	r16,0b01100000
+			ldi 	r16,0b01100001
 			out 	PORTD,r16
 
 			sts		Flags,__zero_reg__
+			sts		UART_Flags,__zero_reg__
+
+			;---------------------
+			; Инициализация UART
+			;---------------------
+			USART_INIT
+			;---------------------
 
 			; Инициализация SPI
 			rcall	SPI_INIT
@@ -602,12 +611,12 @@ DEC_DAC_SET:
 			; Преобразовать число в строку
 			lds		XL,DAC_CH_B+0
 			lds		XH,DAC_CH_B+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -645,12 +654,12 @@ INC_DAC_SET:
 			; Преобразовать число в строку
 			lds		XL,DAC_CH_B+0
 			lds		XH,DAC_CH_B+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -758,12 +767,12 @@ Event_update:
 			; Преобразовать число в строку
 			lds		XL,ADC_CH0+0
 			lds		XH,ADC_CH0+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			
 			rcall	Calculate_current
@@ -771,16 +780,16 @@ Event_update:
 			; convert digit to string
 			mov		XL,r18
 			mov		XH,r19
-			ldi		YL,low(STR7)
-			ldi		YH,high(STR7)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR7
 			; Установить координаты вывода
 			ldi		r18,1
 			ldi		r19,8
 			call	T6963C_TextGoTo
 			; Вывести число на дисплей
-			ldi		XL,low(STR7)
-			ldi		XH,high(STR7)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			;.......................................................
 			ldi		r20,104
@@ -809,12 +818,12 @@ Event_update:
 			; Преобразовать число в строку
 			lds		XL,ADC_CH1+0
 			lds		XH,ADC_CH1+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			
 			rcall	Calculate_voltage
@@ -822,16 +831,16 @@ Event_update:
 			; convert digit to string
 			mov		XL,r22
 			mov		XH,r23
-			ldi		YL,low(STR7)
-			ldi		YH,high(STR7)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR7
 			; Установить координаты вывода
 			ldi		r18,1
 			ldi		r19,13
 			call	T6963C_TextGoTo
 			; Вывести число на дисплей
-			ldi		XL,low(STR7)
-			ldi		XH,high(STR7)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			;.......................................................
 			ldi		r20,104

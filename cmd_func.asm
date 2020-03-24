@@ -181,7 +181,7 @@ cmd_set_next:
 			; Выводим значение в терминал
 			rcall	GET_VAR_KEY_VAL ; (IN: VAR_ID)
 			; Сохраняем в EEPROM
-			rcall	EEPROM_SAVE_CALIBRATIONS
+			call	EEPROM_SAVE_CALIBRATIONS
 			clr		r13
 			ret
 cmd_set_error_arg:
@@ -253,7 +253,7 @@ cmd_get_single_var:
 			movw	XL,r24
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
 			rcall	STRING_TO_UART ; (IN: X)
@@ -272,7 +272,7 @@ cmd_get_VAR_NOT_FOUND:
 ; Результаты выдаются в терминал
 ;------------------------------------------------------------------------------
 cmd_start:
-			rcall	BTN_LONG_PRESS_EVENT
+			call	IVC_TRACE_START
 			clr		r13
 			ret
 
@@ -296,19 +296,19 @@ cmd_dac_next:
 			rcall	STR_TO_UINT16	; (IN: Y; OUT: r25:r24)
 			tst		r13
 			brne	cmd_dac_error_num
-			sts		DAC+0,r24
-			sts		DAC+1,r25
-			rcall	DAC_SET
+			sts		DAC_CH_A+0,r24
+			sts		DAC_CH_A+1,r25
+			call	DAC_SET_A
 			rjmp	cmd_dac_success
 cmd_dac_show:
 			ldi		ZL,low(DAC_const*2)
 			ldi		ZH,high(DAC_const*2)
 			rcall	FLASH_CONST_TO_UART ; (IN: Z)
-			lds		XL,DAC+0
-			lds		XH,DAC+1
+			lds		XL,DAC_CH_A+0
+			lds		XH,DAC_CH_A+1
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
 			rcall	STRING_TO_UART ; (IN: X)
@@ -354,7 +354,7 @@ GET_ALL_VARS_LOOP:
 			ld		XH,Y
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
 			rcall	STRING_TO_UART ; (IN: X)
@@ -399,7 +399,7 @@ GET_VAR_KEY_VAL:
 			ld		XH,Y
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
 			rcall	STRING_TO_UART ; (IN: X)

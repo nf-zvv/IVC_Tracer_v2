@@ -39,7 +39,7 @@ rjmp	OVF0_IRQ
 .org	SPIaddr		; SPI Serial Transfer Complete
 reti
 .org	URXC0addr	; USART0, Rx Complete
-reti
+rjmp	RX_OK
 .org	UDRE0addr	; USART0 Data register Empty
 reti
 .org	UTXC0addr	; USART0, Tx Complete

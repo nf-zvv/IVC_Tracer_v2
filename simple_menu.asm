@@ -480,16 +480,16 @@ main_scr_dec_dac_step:
 			; Преобразовать число в строку
 			mov		XL,r24
 			mov		XH,r25
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Установить координаты вывода
 			ldi		r18,11
 			ldi		r19,3
 			call	T6963C_TextGoTo
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -513,16 +513,16 @@ main_scr_inc_dac_step:
 			; Преобразовать число в строку
 			mov		XL,r24
 			mov		XH,r25
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Установить координаты вывода
 			ldi		r18,11
 			ldi		r19,3
 			call	T6963C_TextGoTo
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -1126,7 +1126,7 @@ calib_scr_btn_press:
 calib_scr_btn_press_8:
 			cpi		r16,8 ;  пункт "Отмена"
 			brne	calib_scr_btn_press_act
-			rcall	EEPROM_RESTORE_VAR
+			call	EEPROM_RESTORE_VAR
 calib_scr_btn_press_menu_exit:
 			lds		r16,Flags
 			ori		r16,(1<<change_screen) ; установка флага выхода из меню Калибровки
@@ -1162,117 +1162,117 @@ EEPROM_SAVE_CALIBRATIONS:
 			; ZERO_DAC
 			ldi		r16,low(E_ZERO_DAC+0)
 			ldi		r17,high(E_ZERO_DAC+0)
-			rcall	EERead
+			call	EERead
 			lds		r19,ZERO_DAC+0
 			cp		r18,r19
 			breq	test_next_byte_1
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_1:
 			ldi		r16,low(E_ZERO_DAC+1)
 			ldi		r17,high(E_ZERO_DAC+1)
-			rcall	EERead
+			call	EERead
 			lds		r19,ZERO_DAC+1
 			cp		r18,r19
 			breq	test_next_byte_2
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_2:
 			; VREF_DAC
 			ldi		r16,low(E_VREF_DAC+0)
 			ldi		r17,high(E_VREF_DAC+0)
-			rcall	EERead
+			call	EERead
 			lds		r19,VREF_DAC+0
 			cp		r18,r19
 			breq	test_next_byte_3
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_3:
 			ldi		r16,low(E_VREF_DAC+1)
 			ldi		r17,high(E_VREF_DAC+1)
-			rcall	EERead
+			call	EERead
 			lds		r19,VREF_DAC+1
 			cp		r18,r19
 			breq	test_next_byte_4
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_4:
 			; CH0_DELTA
 			ldi		r16,low(E_CH0_DELTA+0)
 			ldi		r17,high(E_CH0_DELTA+0)
-			rcall	EERead
+			call	EERead
 			lds		r19,CH0_DELTA+0
 			cp		r18,r19
 			breq	test_next_byte_5
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_5:
 			ldi		r16,low(E_CH0_DELTA+1)
 			ldi		r17,high(E_CH0_DELTA+1)
-			rcall	EERead
+			call	EERead
 			lds		r19,CH0_DELTA+1
 			cp		r18,r19
 			breq	test_next_byte_6
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_6:
 			; CH1_DELTA
 			ldi		r16,low(E_CH1_DELTA+0)
 			ldi		r17,high(E_CH1_DELTA+0)
-			rcall	EERead
+			call	EERead
 			lds		r19,CH1_DELTA+0
 			cp		r18,r19
 			breq	test_next_byte_7
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_7:
 			ldi		r16,low(E_CH1_DELTA+1)
 			ldi		r17,high(E_CH1_DELTA+1)
-			rcall	EERead
+			call	EERead
 			lds		r19,CH1_DELTA+1
 			cp		r18,r19
 			breq	test_next_byte_8
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_8:
 			; ADC_V_REF
 			ldi		r16,low(E_ADC_V_REF+0)
 			ldi		r17,high(E_ADC_V_REF+0)
-			rcall	EERead
+			call	EERead
 			lds		r19,ADC_V_REF+0
 			cp		r18,r19
 			breq	test_next_byte_9
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_9:
 			ldi		r16,low(E_ADC_V_REF+1)
 			ldi		r17,high(E_ADC_V_REF+1)
-			rcall	EERead
+			call	EERead
 			lds		r19,ADC_V_REF+1
 			cp		r18,r19
 			breq	test_next_byte_10
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_10:
 			; ACS712_KI
 			ldi		r16,low(E_ACS712_KI)
 			ldi		r17,high(E_ACS712_KI)
-			rcall	EERead
+			call	EERead
 			lds		r19,ACS712_KI
 			cp		r18,r19
 			breq	test_next_byte_11
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_11:
 			; RESDIV_KU
 			ldi		r16,low(E_RESDIV_KU)
 			ldi		r17,high(E_RESDIV_KU)
-			rcall	EERead
+			call	EERead
 			lds		r19,RESDIV_KU
 			cp		r18,r19
 			breq	test_next_byte_12
 			mov		r18,r19
-			rcall	EEWrite
+			call	EEWrite
 test_next_byte_12:
 			ret
 
@@ -1294,12 +1294,12 @@ calib_scr_update:
 			; Преобразовать число в строку
 			lds		XL,ADC_CH0+0
 			lds		XH,ADC_CH0+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; ........ Напряжение ........
 			; Установить координаты вывода
@@ -1309,12 +1309,12 @@ calib_scr_update:
 			; Преобразовать число в строку
 			lds		XL,ADC_CH1+0
 			lds		XH,ADC_CH1+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			;..................................................................
 			; Вывести реальные значение тока и напряжения
@@ -1323,16 +1323,16 @@ calib_scr_update:
 			; convert digit to string
 			mov		XL,r18
 			mov		XH,r19
-			ldi		YL,low(STR7)
-			ldi		YH,high(STR7)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR7
 			; Установить координаты вывода
 			ldi		r18,4
 			ldi		r19,4
 			call	T6963C_TextGoTo
 			; Вывести число на дисплей
-			ldi		XL,low(STR7)
-			ldi		XH,high(STR7)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; ........ Напряжение ........
 			rcall	Calculate_voltage ; ADC_code -> mV
@@ -1343,12 +1343,12 @@ calib_scr_update:
 			; Преобразовать число в строку
 			mov		XL,r22
 			mov		XH,r23
-			ldi		YL,low(STR7)
-			ldi		YH,high(STR7)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR7
 			; Вывести число на дисплей
-			ldi		XL,low(STR7)
-			ldi		XH,high(STR7)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 			rcall	PRINT_CALIBRATION_DEFAULT
@@ -1628,7 +1628,7 @@ ivc_trace_scr_btn_press:
 			lds		r16,menu_ID
 			cpi		r16,0 ;  пункт "START"
 			brne	ivc_trace_scr_btn_press_4
-			rjmp	IVC_TRACE_START
+			rjmp	IVC_TRACE_BTN_START_PRESS
 ivc_trace_scr_btn_press_4:
 			cpi		r16,4 ;  пункт "EXIT"
 			brne	ivc_trace_scr_btn_press_act
@@ -1662,11 +1662,254 @@ ivc_trace_scr_btn_press_exit:
 ;
 ;
 ;------------------------------------------------------------------------------
-IVC_TRACE_START:
+IVC_TRACE_BTN_START_PRESS:
 			; очистить область для вывода данных
-
+			rcall	IVC_TRACE_START
 			ret		; возвращает управление в IVC_TRACE_SCREEN 
 			        ; в цикл IVC_TRACE_SCREEN_WAIT_EVENT
+
+
+;------------------------------------------------------------------------------
+; Длительное нажалие на кнопку
+; Запускает автоматическое снятие ВАХ солнечного модуля
+; Дополнение от 29.02.2020:
+;   Если начальное значение ЦАП будет больше конечного, тогда 
+;   вычитать шаг из начального пока не будет достигнуто конечное.
+;   Это сделано с оой целью, чтобы идти от точки КЗ к точке ХХ
+; 03.03.2020 Проведены некоторые оптимизации после вышеуказанного дополнения
+;
+; Вызовы: FLASH_CONST_TO_LCD, DAC_SET, ADC_RUN, PRINT_IVC_DATA_TO_UART,
+;         WaitMiliseconds, подпрограммя для работы с дисплеем
+; Используются: r3*, r4*, r12*, r13*, r16*, r17*, r22*, r23*, r24*, r25*, X*, Y*, Z*
+; Вход: -
+; Выход: IVC_ARRAY
+;------------------------------------------------------------------------------
+IVC_TRACE_START:
+			; Отключаем таймер энкодера и кнопки
+			clr		r16
+			OutReg	TCCR0B,r16
+			cli
+			; сброс флага
+			;lds		r16,Flags
+			;andi	r16,~((1 << btn_long_press) | (1 << btn_press))
+			;sts		Flags,r16
+			; Сохраняем текущее значение ЦАП
+			lds		r16,DAC_CH_A+0
+			push	r16
+			lds		r16,DAC_CH_A+1
+			push	r16
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; Текущее действие на дисплее
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; Подготовка, инициализация переменных
+; Измерения сохраняются в массив IVC_ARRAY
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+			; Загружаем начальные значения
+			lds		r22,IVC_DAC_START+0
+			lds		r23,IVC_DAC_START+1
+			lds		r24,IVC_DAC_STEP+0
+			lds		r25,IVC_DAC_STEP+1
+			lds		r12,IVC_DAC_END+0
+			lds		r13,IVC_DAC_END+1
+			; Массив, куда сохраняем результаты
+			ldi		YL,low(IVC_ARRAY)
+			ldi		YH,high(IVC_ARRAY)
+			clr		r3	; счетчик измерений
+			; Сравниваем начальное и конечное значение ЦАП
+			cp		r22,r12
+			cpc		r23,r13
+			brlo	VAH_LOOP_FORWARD
+			mov		r4,__zero_reg__ ; если IVC_DAC_START > IVC_DAC_END
+			rjmp	VAH_LOOP
+VAH_LOOP_FORWARD:
+			ldi		r16,1           ; если IVC_DAC_START < IVC_DAC_END
+			mov		r4,r16
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; Цикл измерений
+; Устанавливаем значение ЦАП и считываем показания тока и напряжения
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+VAH_LOOP:
+			; 1. устанавливаем новое значение ЦАП
+			sts		DAC_CH_A+0,r22
+			sts		DAC_CH_A+1,r23
+			rcall	DAC_SET_A
+			; 2. задержка после смены значения (для завершения перех. процессов)
+			ldi		r16,50
+			rcall	WaitMiliseconds		; [использует регистры r16 и X]
+			; 3. считываем значение каналов АЦП
+			call	ADC_RUN
+			; 4. схораняем результат в память
+			lds		r16,ADC_CH0+1
+			st		Y+,r16
+			lds		r16,ADC_CH0+0
+			st		Y+,r16
+			; 6. схораняем результат в IVC_ARRAY
+			lds		r16,ADC_CH2+1
+			st		Y+,r16
+			lds		r16,ADC_CH2+0
+			st		Y+,r16
+			; Увеличиваем счетчик числа измерений
+			inc		r3
+			; Определяем направление изменения ЦАП
+			tst		r4
+			brne	VAH_LOOP_INC
+			breq	VAH_LOOP_DEC
+VAH_LOOP_INC:
+			; Берём следующее значение
+			; r23:r22 = r23:r22 + r25:r24
+			add		r22,r24
+			adc		r23,r25
+			; Проверка (не дошли ли до конца?)
+			cp		r22,r12		; не подошли ли к IVC_DAC_END
+			cpc		r23,r13
+			brlo	VAH_LOOP
+			rjmp	VAH_LOOP_END
+VAH_LOOP_DEC:
+			; Берём следующее значение
+			; r23:r22 = r23:r22 - r25:r24
+			sub		r22,r24
+			sbc		r23,r25
+			; Проверка (не дошли ли до конца?)
+			cp		r22,r12		; не подошли ли к IVC_DAC_END
+			cpc		r23,r13
+			brsh	VAH_LOOP
+VAH_LOOP_END:
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; Вывести на дисплей количество снятых точек
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+			mov		r16,r3
+			rcall	Bin1ToBCD3
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; Отправка результатов на компьютер по UART
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+			rcall	PRINT_IVC_DATA_TO_UART
+			; Восстанавливаем значение ЦАП до экспримента
+			pop		r16
+			sts		DAC_CH_A+1,r16
+			pop		r16
+			sts		DAC_CH_A+0,r16
+			rcall	DAC_SET_A
+			; Небольшая задержка
+			ldi		r16,250
+			rcall	WaitMiliseconds		; использует регистры r16 и X
+			ldi		r16,250
+			rcall	WaitMiliseconds		; использует регистры r16 и X
+			sei
+			; Включаем таймер энкодера и кнопки
+			ldi		r16,T0_Clock_Select
+			OutReg	TCCR0B,r16
+			ret
+
+
+;------------------------------------------------------------------------------
+; Отправка результатов на компьютер по UART
+; 
+; Вызовы: DEC_TO_STR5, DEC_TO_STR7, Calculate_current, Calculate_voltage, 
+;         STRING_TO_UART
+; Используются:
+; Вход: IVC_ARRAY
+; Выход: <UART>
+;------------------------------------------------------------------------------
+PRINT_IVC_DATA_TO_UART:
+			; Загружаем начальные значения
+			lds		r22,IVC_DAC_START+0
+			lds		r23,IVC_DAC_START+1
+			lds		r24,IVC_DAC_STEP+0
+			lds		r25,IVC_DAC_STEP+1
+			lds		r12,IVC_DAC_END+0
+			lds		r13,IVC_DAC_END+1
+			; Массив с данными
+			ldi		ZL,low(IVC_ARRAY)
+			ldi		ZH,high(IVC_ARRAY)
+			; Сравниваем начальное и конечное значение ЦАП
+			cp		r22,r12
+			cpc		r23,r13
+			brlo	PRINT_IVC_DATA_TO_UART_FORWARD
+			ldi		r16,0
+			mov		r4,r16     ; если IVC_DAC_START > IVC_DAC_END
+			rjmp	PRINT_IVC_DATA_TO_UART_LOOP
+PRINT_IVC_DATA_TO_UART_FORWARD:
+			ldi		r16,1
+			mov		r4,r16     ; если IVC_DAC_START < IVC_DAC_END
+PRINT_IVC_DATA_TO_UART_LOOP:
+			; Подготавливаем для вывода DAC
+			mov		XL,r22
+			mov		XH,r23
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
+			rcall	DEC_TO_STR5
+			; Надо удалить последний символ в строке! Там 0 стоит
+			ld		r16,-Y
+			; Разделитель - табуляция
+			ldi		r16,9
+			st		Y+,r16
+			; Подготавливаем для вывода ток
+			ld		r16,Z+ ; Извлекаем младший байт АЦП
+			ld		r17,Z+ ; Извлекаем старший байт АЦП
+			call	Calculate_current ; (IN: r17:r16, OUT: r19:r18)
+			; Преобразовать в строку
+			mov		XL,r18
+			mov		XH,r19
+			;ldi		YL,low(STRING)
+			;ldi		YH,high(STRING)
+			rcall	DEC_TO_STR7
+			; Надо удалить последний символ в строке! Там 0 стоит
+			ld		r16,-Y
+			; Разделитель - табуляция
+			ldi		r16,9
+			st		Y+,r16
+			; Подготавливаем для вывода напряжение
+			ld		r16,Z+	; младший байт АЦП
+			ld		r17,Z+	; старший байт АЦП
+			call	Calculate_voltage ; (IN: r17:r16, OUT: r19:r18)
+			; Преобразовать в строку
+			mov		XL,r18
+			mov		XH,r19
+			;ldi		YL,low(STRING)
+			;ldi		YH,high(STRING)
+			rcall	DEC_TO_STR5
+			; Надо удалить последний символ в строке! Там 0 стоит
+			ld		r16,-Y
+			; Конец строки
+			ldi		r16,13
+			st		Y+,r16
+			ldi		r16,10
+			st		Y+,r16
+			clr		r16
+			st		Y+,r16
+			; Отправить число по UART
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
+			rcall	STRING_TO_UART
+			; Теперь нужно увеличить или уменьшить r23:r22
+			; Проверить не превысило ли, или наоборот, не стало ли ниже конечного значения
+			; И при необходимости вернуться на исходную метку
+			tst		r4
+			brne	PRINT_IVC_DATA_TO_UART_INC
+			breq	PRINT_IVC_DATA_TO_UART_DEC
+PRINT_IVC_DATA_TO_UART_INC:
+			; Либо это:
+			; r23:r22 = r23:r22 + r25:r24
+			add		r22,r24
+			adc		r23,r25
+			; Сравниваем начальное и конечное значение ЦАП
+			cp		r22,r12
+			cpc		r23,r13
+			brlo	PRINT_IVC_DATA_TO_UART_LOOP
+			rjmp	PRINT_IVC_DATA_TO_UART_EXIT
+PRINT_IVC_DATA_TO_UART_DEC:
+			; Либо вот это:
+			; r23:r22 = r23:r22 - r25:r24
+			sub		r22,r24
+			sbc		r23,r25
+			; Сравниваем начальное и конечное значение ЦАП
+			cp		r22,r12
+			cpc		r23,r13
+			brsh	PRINT_IVC_DATA_TO_UART_LOOP
+PRINT_IVC_DATA_TO_UART_EXIT:
+			ret
 
 
 
@@ -1691,12 +1934,12 @@ IVC_TRACE_DAC_START_INC:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_START+0
 			lds		XH,IVC_DAC_START+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -1721,12 +1964,12 @@ IVC_TRACE_DAC_END_INC:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_END+0
 			lds		XH,IVC_DAC_END+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -1751,12 +1994,12 @@ IVC_TRACE_DAC_STEP_INC:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_STEP+0
 			lds		XH,IVC_DAC_STEP+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -1782,12 +2025,12 @@ IVC_TRACE_DAC_START_DEC:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_START+0
 			lds		XH,IVC_DAC_START+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -1813,12 +2056,12 @@ IVC_TRACE_DAC_END_DEC:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_END+0
 			lds		XH,IVC_DAC_END+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -1844,12 +2087,12 @@ IVC_TRACE_DAC_STEP_DEC:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_STEP+0
 			lds		XH,IVC_DAC_STEP+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			rcall	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -1995,12 +2238,12 @@ PRINT_MAIN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,DAC_CH_B+0
 			lds		XH,DAC_CH_B+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
-			rcall	DEC_TO_STR5
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
+			call	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; Выводим значение DAC_STEP на дисплей
 			; Установить координаты вывода
@@ -2010,12 +2253,12 @@ PRINT_MAIN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,DAC_STEP+0
 			lds		XH,DAC_STEP+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
-			rcall	DEC_TO_STR5
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
+			call	DEC_TO_STR5
 			; Вывести числа на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
@@ -2168,12 +2411,12 @@ PRINT_CALIBRATION_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,ZERO_DAC+0
 			lds		XH,ZERO_DAC+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 			; Установить координаты вывода
@@ -2183,12 +2426,12 @@ PRINT_CALIBRATION_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,VREF_DAC+0
 			lds		XH,VREF_DAC+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 			; Установить координаты вывода
@@ -2198,12 +2441,12 @@ PRINT_CALIBRATION_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,CH0_DELTA+0
 			lds		XH,CH0_DELTA+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 			; Установить координаты вывода
@@ -2213,12 +2456,12 @@ PRINT_CALIBRATION_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,CH1_DELTA+0
 			lds		XH,CH1_DELTA+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 			; Установить координаты вывода
@@ -2228,12 +2471,12 @@ PRINT_CALIBRATION_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,ADC_V_REF+0
 			lds		XH,ADC_V_REF+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 			; Установить координаты вывода
@@ -2243,12 +2486,12 @@ PRINT_CALIBRATION_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,ACS712_KI
 			clr		XH
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 			; Установить координаты вывода
@@ -2258,12 +2501,12 @@ PRINT_CALIBRATION_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,RESDIV_KU
 			clr		XH
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 
@@ -2355,12 +2598,12 @@ PRINT_IVC_TRACE_SCREEN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_START+0
 			lds		XH,IVC_DAC_START+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; Установить координаты вывода
 			ldi		r18,13
@@ -2369,12 +2612,12 @@ PRINT_IVC_TRACE_SCREEN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_END+0
 			lds		XH,IVC_DAC_END+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; Установить координаты вывода
 			ldi		r18,13
@@ -2383,12 +2626,12 @@ PRINT_IVC_TRACE_SCREEN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,IVC_DAC_STEP+0
 			lds		XH,IVC_DAC_STEP+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 
 			ret
@@ -2479,12 +2722,12 @@ PRINT_LIMITS_SCREEN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,LIM_VOLT_NEG+0
 			lds		XH,LIM_VOLT_NEG+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; Установить координаты вывода
 			ldi		r18,18
@@ -2493,12 +2736,12 @@ PRINT_LIMITS_SCREEN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,LIM_VOLT_POS+0
 			lds		XH,LIM_VOLT_POS+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; Установить координаты вывода
 			ldi		r18,18
@@ -2507,12 +2750,12 @@ PRINT_LIMITS_SCREEN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,LIM_CURR_NEG+0
 			lds		XH,LIM_CURR_NEG+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; Установить координаты вывода
 			ldi		r18,18
@@ -2521,12 +2764,12 @@ PRINT_LIMITS_SCREEN_DEFAULT:
 			; Преобразовать число в строку
 			lds		XL,LIM_CURR_POS+0
 			lds		XH,LIM_CURR_POS+1
-			ldi		YL,low(STR5)
-			ldi		YH,high(STR5)
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
 			call	DEC_TO_STR5
 			; Вывести число на дисплей
-			ldi		XL,low(STR5)
-			ldi		XH,high(STR5)
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			ret
 
