@@ -198,7 +198,7 @@ ivc_trace_scr_update_action:
 menu_event_handler_change_screen:
 			lds		r16,Flags
 			sbrs	r16,change_screen
-			rjmp	menu_event_handler_end
+			rjmp	menu_event_handler_uart_rx_parse
 			; сработало событие change_screen
 			; сбросим флаг
 			andi	r16,~(1 << change_screen)
@@ -215,16 +215,28 @@ menu_event_handler_change_screen:
 			cpi		r16,IVC_TRACE_SCREEN_ID
 			breq	ivc_trace_scr_change_screen_action
 			; Некорректное значение screen_ID
-			rjmp	menu_event_handler_end
+			rjmp	menu_event_handler_uart_rx_parse
 main_scr_change_screen_action:
 			rcall	MAIN_SCREEN
-			rjmp	menu_event_handler_end
+			rjmp	menu_event_handler_uart_rx_parse
 calib_scr_change_screen_action:
 			rcall	CALIBRATION_SCREEN
-			rjmp	menu_event_handler_end
+			rjmp	menu_event_handler_uart_rx_parse
 ivc_trace_scr_change_screen_action:
 			rcall	IVC_TRACE_SCREEN
-			;rjmp	menu_event_handler_end
+			;rjmp	menu_event_handler_uart_rx_parse
+
+;------------------------------------------------------------------------------
+menu_event_handler_uart_rx_parse:
+			lds		r16,UART_Flags
+			sbrs	r16,UART_STR_RCV
+			rjmp	menu_event_handler_end
+			; сработало событие uart_rx_parse
+			; сбросим флаг
+			;andi	r16,~(1 << UART_STR_RCV)
+			;sts		UART_Flags,r16
+			; Сброс флага выполняется в начале подпрограммы UART_RX_PARSE
+			call	UART_RX_PARSE
 menu_event_handler_end:
 			rjmp	MENU_EVENT_HANDLER
 

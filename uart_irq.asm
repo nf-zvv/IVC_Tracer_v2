@@ -46,7 +46,7 @@ RX_OK:
 			#error "Unsupported part:" __PART_NAME__
 			#endif // part specific code
 			
-			;OutReg	UDR0,R17			; Отправляем его в USART (эхо)
+			OutReg	UDR0,R17			; Отправляем его в USART (эхо)
 		
 			cpi		r17,0x0A		; Line Feed (Перевод строки)
 			breq	RX_OK_EXIT		; просто игнорируем LF (0x0A)

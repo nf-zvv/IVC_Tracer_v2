@@ -18,12 +18,12 @@
 			OutReg 	UBRR0L,r16
 			ldi		r16,high(bauddivider)
 			OutReg 	UBRR0H,r16
-			ldi		r16,0
+			ldi		r16,0	
 			OutReg 	UCSR0A,r16
 			ldi		r16,(1<<RXEN0)|(1<<TXEN0)|(1<<RXCIE0)|(0<<TXCIE0)|(0<<UDRIE0) ; ѕрерывание на прием разрешено, прием-передача разрешены
 			OutReg 	UCSR0B,r16
 			; ‘ормат кадра - 8 бит данных, 1 стоп-бит
-			ldi		r16,(0<<USBS0)|(3<<UCSZ00)
+			ldi		r16,(0<<USBS0)|(1<<UCSZ01)|(1<<UCSZ00)
 			OutReg 	UCSR0C,r16
 			#elif defined(__ATmega8__) || defined(__ATmega16A__) || defined(__ATmega16__)
 			ldi		r16,low(bauddivider)

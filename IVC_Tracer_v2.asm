@@ -6,6 +6,24 @@
 ; (C) 2019-2020 Vitaliy Zinoviev
 ; https://github.com/nf-zvv/IVC_Tracer_v2
 ;
+; Fuses:
+; Low Fuse 0xF7
+; High Fuse 0xD4
+; Extended Fuse 0xFD
+; avrdude -U lfuse:w:0xF7:m -U hfuse:w:0xD4:m -U efuse:w:0xFD:m
+; 
+; Bootloader:
+; optiboot_flash_atmega1284p_UART0_115200_18432000L_B7_BIGBOOT
+; LED on PB7 (two blinks)
+; https://github.com/MCUdude/optiboot_flash
+; https://github.com/Optiboot/optiboot/wiki/HowOptibootWorks
+;
+; Burn flash via UART:
+; avrdude -c arduino -b 115200 -P COM9 -p m1284p -U flash:w:IVC_Tracer_v2.hex:i
+; 
+; Burn flash via ISP:
+; avrdude -c usbasp -p m1284p -B10 -U flash:w:IVC_Tracer_v2.hex
+;
 ; History
 ; =======
 
@@ -429,7 +447,7 @@ RESET:
 			; Port D Init
 			ldi 	r16,0b01100010
 			out 	DDRD,r16
-			ldi 	r16,0b01100001
+			ldi 	r16,0b01100011
 			out 	PORTD,r16
 
 			sts		Flags,__zero_reg__
@@ -453,6 +471,9 @@ RESET:
 			; Восстановить переменные из EEPROM
 			rcall	EEPROM_PRELOAD
 			rcall	EEPROM_RESTORE_VAR
+
+			; Инициализация интерпретатора команд UART
+			call	UART_PARSER_INIT
 
 
 			;------------------------------------------------------------------
