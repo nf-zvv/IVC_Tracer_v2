@@ -1644,6 +1644,8 @@ ivc_trace_scr_btn_press:
 ivc_trace_scr_btn_press_4:
 			cpi		r16,4 ;  пункт "EXIT"
 			brne	ivc_trace_scr_btn_press_act
+			; TODO: проверить изменены ли переменные и сохранить их при необходимости
+			rcall	SAVE_IVC_VARS
 			ldi		r16,MAIN_SCREEN_ID
 			sts		screen_ID,r16
 			lds		r16,Flags
@@ -1670,8 +1672,76 @@ ivc_trace_scr_btn_press_exit:
 
 
 ;------------------------------------------------------------------------------
+; Сохранить переменные АВАХ в EEPROM, если они были изменены
 ;
+; IVC_DAC_START, IVC_DAC_END, IVC_DAC_STEP
 ;
+;------------------------------------------------------------------------------
+SAVE_IVC_VARS:
+			; IVC_DAC_START
+			ldi		r16,low(E_IVC_DAC_START+0)
+			ldi		r17,high(E_IVC_DAC_START+0)
+			call	EERead
+			lds		r19,IVC_DAC_START+0
+			cp		r18,r19
+			breq	IVC_DAC_START_byte_1
+			mov		r18,r19
+			call	EEWrite
+IVC_DAC_START_byte_1:
+			ldi		r16,low(E_IVC_DAC_START+1)
+			ldi		r17,high(E_IVC_DAC_START+1)
+			call	EERead
+			lds		r19,IVC_DAC_START+1
+			cp		r18,r19
+			breq	IVC_DAC_END_byte_0
+			mov		r18,r19
+			call	EEWrite
+IVC_DAC_END_byte_0:
+			; IVC_DAC_END
+			ldi		r16,low(E_IVC_DAC_END+0)
+			ldi		r17,high(E_IVC_DAC_END+0)
+			call	EERead
+			lds		r19,IVC_DAC_END+0
+			cp		r18,r19
+			breq	IVC_DAC_END_byte_1
+			mov		r18,r19
+			call	EEWrite
+IVC_DAC_END_byte_1:
+			ldi		r16,low(E_IVC_DAC_END+1)
+			ldi		r17,high(E_IVC_DAC_END+1)
+			call	EERead
+			lds		r19,IVC_DAC_END+1
+			cp		r18,r19
+			breq	IVC_DAC_STEP_byte_0
+			mov		r18,r19
+			call	EEWrite
+IVC_DAC_STEP_byte_0:
+			; IVC_DAC_STEP
+			ldi		r16,low(E_IVC_DAC_STEP+0)
+			ldi		r17,high(E_IVC_DAC_STEP+0)
+			call	EERead
+			lds		r19,IVC_DAC_STEP+0
+			cp		r18,r19
+			breq	IVC_DAC_STEP_byte_1
+			mov		r18,r19
+			call	EEWrite
+IVC_DAC_STEP_byte_1:
+			ldi		r16,low(E_IVC_DAC_STEP+1)
+			ldi		r17,high(E_IVC_DAC_STEP+1)
+			call	EERead
+			lds		r19,IVC_DAC_STEP+1
+			cp		r18,r19
+			breq	SAVE_IVC_VARS_EXIT
+			mov		r18,r19
+			call	EEWrite
+SAVE_IVC_VARS_EXIT:
+			ret
+
+
+;------------------------------------------------------------------------------
+; Нажтие на кнопку запуска
+; 
+; Запуск процедуры автоматического снятия ВАХ
 ;
 ;------------------------------------------------------------------------------
 IVC_TRACE_BTN_START_PRESS:
