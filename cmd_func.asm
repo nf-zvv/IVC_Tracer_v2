@@ -160,9 +160,18 @@ cmd_set_next:
 			sts		VAR_ID,r18		; сохраняем ID найденной переменной
 			ldi		r16,2			; берем второй аргумент
 			rcall	GET_ARGUMENT	; (OUT: Y - pointer to zero-ended argument string)
-			rcall	STR_TO_UINT16	; (IN: Y; OUT: r25:r24)
-			tst		r13
-			brne	cmd_set_error_num
+			;rcall	STR_TO_UINT16	; (IN: Y; OUT: r25:r24)
+			;tst		r13
+			;brne	cmd_set_error_num
+			rcall	atoi	; преобразовать строку в число (IN: Y; OUT: r25:r24)
+			; Проверка
+			; TODO: для переменных LIM_* - проверки надо сделать другие
+			;cp		r24,0
+			;cpc		r25,0
+			;brlt	cmd_dac_error_num
+			;cp		r24,low(4096)
+			;cpc		r25,high(4096)
+			;brsh	cmd_dac_error_num
 			; Имя переменной и числовой аргумент корректные,
 			; значит можно выпонить присваивание
 			; Загружаем адрес таблицы
@@ -303,9 +312,16 @@ cmd_dac_max_arg_tst:
 cmd_dac_next:
 			ldi		r16,1			; берем первый аргумент
 			rcall	GET_ARGUMENT	; (Y - pointer to zero ending argument string)
-			rcall	STR_TO_UINT16	; (IN: Y; OUT: r25:r24)
-			tst		r13
-			brne	cmd_dac_error_num
+			;rcall	STR_TO_UINT16	; (IN: Y; OUT: r25:r24)
+			;tst		r13
+			;brne	cmd_dac_error_num
+			rcall	atoi	; преобразовать строку в число (IN: Y; OUT: r25:r24)
+			cp		r24,0
+			cpc		r25,0
+			brlt	cmd_dac_error_num
+			cp		r24,low(4096)
+			cpc		r25,high(4096)
+			brsh	cmd_dac_error_num
 			sts		DAC_CH_A+0,r24
 			sts		DAC_CH_A+1,r25
 			call	DAC_SET_A
