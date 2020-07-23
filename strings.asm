@@ -167,8 +167,74 @@ STR_LEN_EXIT:
 
 ;-----------------------------------------------------------------------------
 ; Преобразование строки в число
+; Работает как с положительными (0...65535), 
+; так и с отрицательными числами (-32767...32767)
+; Как только встречается не число, преобразование завершается
+
+; 
+; Используются: r16*, r24*, r25*, r28*, r29*
+; Вход: Y (0-ended строка)
+; Выход: r25:r24
+;-----------------------------------------------------------------------------
+atoi:
+			clr		r24		; Очистить r24
+			clr		r25		; Очистить r25
+			clt
+atoi_1:
+			ld		r16,Y+
+			cpi		r16,0x20	; пробел
+			breq	atoi_1
+			cpi		r16,0x09
+			brcs	atoi_2
+			cpi		r16,0x0E
+			brcs	atoi_1
+atoi_2:
+			cpi		r16,'+'
+			breq	atoi_3
+			cpi		r16,'-'
+			brne	atoi_4
+			set
+			rjmp	atoi_3
+atoi_5:
+			rcall	mulhi_const_10
+			add		r24,r16
+			adc		r25,__zero_reg__
+atoi_3:
+			ld		r16,Y+
+atoi_4:
+			subi	r16,'0'	; переводим ASCII код цифры в число
+			cpi		r16,0x0A	; 10
+			brcs	atoi_5
+			brtc	atoi_exit
+			; если число отрицательное
+			com		r25
+			neg		r24
+			sbci	r25,0xFF
+atoi_exit:
+			ret
+
+
+;-----------------------------------------------------------------------------
+; Умножение на 10
+; 
+; Используются: r0*, r1*, r23*, r24*, r25*
+; Вход: r25:r24
+; Выход: r25:r24
+;-----------------------------------------------------------------------------
+mulhi_const_10:
+			ldi	r23,10
+			mul	r25,r23
+			mov	r25,r0
+			mul	r24,r23
+			mov	r24,r0
+			add	r25,r1
+			ret
+
+
+;-----------------------------------------------------------------------------
+; Преобразование строки в число
 ; 0...65535
-; Используются: r16*, r24*, r25*, r26*, r27*
+; Используются: r16*, r24*, r25*, r28*, r29*
 ; Вход: Y (0-ended строка)
 ; Выход: r25:r24, r13
 ;        r13 = 0 успешно
@@ -198,7 +264,7 @@ STR_TO_UINT16_5DIGIT:
 			rcall	IS_DIGIT	; проверяем - цифра ли это
 			tst		r16
 			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цтфры в число
+			subi	r17,'0'	; переводим ASCII код цифры в число
 			ldi		tmpL,low(10000)
 			ldi		tmpH,high(10000)
 STR_TO_UINT16_LOOP5:
@@ -214,7 +280,7 @@ STR_TO_UINT16_4DIGIT:
 			rcall	IS_DIGIT	; проверяем - цифра ли это
 			tst		r16		
 			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цтфры в число
+			subi	r17,'0'	; переводим ASCII код цифры в число
 			ldi		tmpL,low(1000)
 			ldi		tmpH,high(1000)
 STR_TO_UINT16_LOOP4:
@@ -230,7 +296,7 @@ STR_TO_UINT16_3DIGIT:
 			rcall	IS_DIGIT	; проверяем - цифра ли это
 			tst		r16		
 			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цтфры в число
+			subi	r17,'0'	; переводим ASCII код цифры в число
 			ldi		tmpL,100
 			mul		r17,tmpL
 			add		WL,r0
@@ -241,7 +307,7 @@ STR_TO_UINT16_2DIGIT:
 			rcall	IS_DIGIT	; проверяем - цифра ли это
 			tst		r16		
 			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цтфры в число
+			subi	r17,'0'	; переводим ASCII код цифры в число
 			ldi		tmpL,10
 			mul		r17,tmpL
 			add		WL,r0
@@ -252,7 +318,7 @@ STR_TO_UINT16_1DIGIT:
 			rcall	IS_DIGIT	; проверяем - цифра ли это
 			tst		r16		
 			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цтфры в число
+			subi	r17,'0'	; переводим ASCII код цифры в число
 			clr		tmpL
 			add		WL,r17
 			adc		WH,tmpL
