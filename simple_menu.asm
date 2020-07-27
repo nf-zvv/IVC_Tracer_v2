@@ -690,6 +690,9 @@ VREF_DAC_DEC:
 			rcall	DECREMENT
 			sts		VREF_DAC+1,r25
 			sts		VREF_DAC+0,r24
+			sts		DAC_CH_A+1,r25
+			sts		DAC_CH_A+0,r24
+			rcall	DAC_SET_A
 			rjmp	calib_scr_encoder_left_exit
 CH0_DELTA_DEC:
 			lds		r25,CH0_DELTA+1
@@ -2099,7 +2102,9 @@ IVC_TRACE_DAC_START_DEC:
 			ldi		r26,1
 			ldi		r27,0
 			; r25:r24 = r25:r24 - r27:r26
-			rcall	DECREMENT	; результат в r25:r24
+			;rcall	DECREMENT	; результат в r25:r24
+			sub		r24,r26
+			sbc		r25,r27
 			sts		IVC_DAC_START+0,r24
 			sts		IVC_DAC_START+1,r25
 			; Установить координаты вывода
@@ -2130,7 +2135,9 @@ IVC_TRACE_DAC_END_DEC:
 			ldi		r26,1
 			ldi		r27,0
 			; r25:r24 = r25:r24 - r27:r26
-			rcall	DECREMENT	; результат в r25:r24
+			;rcall	DECREMENT	; результат в r25:r24
+			sub		r24,r26
+			sbc		r25,r27
 			sts		IVC_DAC_END+0,r24
 			sts		IVC_DAC_END+1,r25
 			; Установить координаты вывода
@@ -2161,7 +2168,9 @@ IVC_TRACE_DAC_STEP_DEC:
 			ldi		r26,1
 			ldi		r27,0
 			; r25:r24 = r25:r24 - r27:r26
-			rcall	DECREMENT	; результат в r25:r24
+			;rcall	DECREMENT	; результат в r25:r24
+			sub		r24,r26
+			sbc		r25,r27
 			sts		IVC_DAC_STEP+0,r24
 			sts		IVC_DAC_STEP+1,r25
 			; Установить координаты вывода
@@ -2173,7 +2182,7 @@ IVC_TRACE_DAC_STEP_DEC:
 			lds		XH,IVC_DAC_STEP+1
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
+			call	DEC_TO_STR5
 			; Вывести числа на дисплей
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)

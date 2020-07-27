@@ -9,7 +9,7 @@
 ;   cal    - калибровка
 ;
 ; (C) 2017-2020 Vitaliy Zinoviev
-; https://github.com/nf-zvv/IVC_Tracer
+; https://github.com/nf-zvv/IVC_Tracer_v2
 ;
 ; History
 ; =======
@@ -316,22 +316,22 @@ cmd_dac_next:
 			;tst		r13
 			;brne	cmd_dac_error_num
 			rcall	atoi	; преобразовать строку в число (IN: Y; OUT: r25:r24)
-			cp		r24,0
-			cpc		r25,0
-			brlt	cmd_dac_error_num
-			cp		r24,low(4096)
-			cpc		r25,high(4096)
-			brsh	cmd_dac_error_num
-			sts		DAC_CH_A+0,r24
-			sts		DAC_CH_A+1,r25
-			call	DAC_SET_A
+			;cp		r24,0
+			;cpc		r25,0
+			;brlt	cmd_dac_error_num
+			;cp		r24,low(4096)
+			;cpc		r25,high(4096)
+			;brsh	cmd_dac_error_num
+			sts		DAC_CH_B+0,r24
+			sts		DAC_CH_B+1,r25
+			call	DAC_SET_B
 			rjmp	cmd_dac_success
 cmd_dac_show:
 			ldi		ZL,low(DAC_const*2)
 			ldi		ZH,high(DAC_const*2)
 			rcall	FLASH_CONST_TO_UART ; (IN: Z)
-			lds		XL,DAC_CH_A+0
-			lds		XH,DAC_CH_A+1
+			lds		XL,DAC_CH_B+0
+			lds		XH,DAC_CH_B+1
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
 			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
