@@ -312,16 +312,17 @@ cmd_dac_max_arg_tst:
 cmd_dac_next:
 			ldi		r16,1			; берем первый аргумент
 			rcall	GET_ARGUMENT	; (Y - pointer to zero ending argument string)
-			;rcall	STR_TO_UINT16	; (IN: Y; OUT: r25:r24)
-			;tst		r13
-			;brne	cmd_dac_error_num
 			rcall	atoi	; преобразовать строку в число (IN: Y; OUT: r25:r24)
-			;cp		r24,0
-			;cpc		r25,0
-			;brlt	cmd_dac_error_num
-			;cp		r24,low(4096)
-			;cpc		r25,high(4096)
-			;brsh	cmd_dac_error_num
+			ldi		YL,0
+			ldi		YH,0
+			cp		r24,YL
+			cpc		r25,YH
+			brlt	cmd_dac_error_num
+			ldi		YL,low(4096)
+			ldi		YH,high(4096)
+			cp		r24,YL
+			cpc		r25,YH
+			brsh	cmd_dac_error_num
 			sts		DAC_CH_B+0,r24
 			sts		DAC_CH_B+1,r25
 			call	DAC_SET_B
