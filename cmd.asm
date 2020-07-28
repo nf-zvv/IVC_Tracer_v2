@@ -192,7 +192,7 @@ SPLIT_LINE_LOOP:
 			; получили первый символ (он находится в r16)
 			; Проверяем на принадлежность к печатаемым знакам
 			mov		r17,r16
-			rcall	IS_CHAR
+			rcall	IS_PRINT
 			tst		r16
 			breq	_nonchar		; не символ - переходим
 			st		X+,r17			; сохраняем символ в массив CMDLINE
@@ -215,8 +215,12 @@ _nonchar:
 			breq	space_rcv
 			cpi		r17,13		; символ конца командной строки
 			breq	enter_rcv
-			cpi		r17,'_'
-			breq	underline_rcv
+			; символы, ввод/пропуск которых допускается для дальнейшей обработки
+			;cpi		r17,'_'
+			;breq	passing_char_rcv
+			;cpi		r17,'-'
+			;breq	passing_char_rcv
+			; остальные непечатные символы игнорируются
 			rjmp	SPLIT_LINE_LOOP
 space_rcv:
 			tst		r14					; если пробел в самом начале (r14=0)
@@ -237,10 +241,10 @@ enter_rcv:
 			ldi		r16,1
 			mov		r13,r16
 			rjmp	SPLIT_LINE_LOOP
-underline_rcv:
-			st		X+,r17
-			inc		r18			; увеличиваем счетчик
-			rjmp	SPLIT_LINE_LOOP
+;passing_char_rcv:
+			;st		X+,r17
+			;inc		r18			; увеличиваем счетчик
+			;rjmp	SPLIT_LINE_LOOP
 SPLIT_LINE_success:
 			; иначе - enter нажат в конце командной строки
 			; добавим ноль - признак конца строки вместо enter'а
