@@ -92,7 +92,7 @@ DAC_INIT:
 DAC_SET_A:
 			cbi		DAC_CS_PORT,DAC_CS	; CS=0
 			lds		r16,DAC_CH_A+1			; старший байт
-			;andi	r16,0b00001111
+			andi	r16,0b00001111			; защита от превышения значения 4095
 			ori		r16,(DAC_A|Buffer_on|Gain_1X|Active)	; буферизованный вход Vref + GAIN 1x
 			rcall	SPI_RW
 			lds		r16,DAC_CH_A+0			; младший байт
@@ -112,7 +112,7 @@ DAC_SET_A:
 DAC_SET_B:
 			cbi		DAC_CS_PORT,DAC_CS	; CS=0
 			lds		r16,DAC_CH_B+1			; старший байт
-			;andi	r16,0b00001111
+			andi	r16,0b00001111			; защита от превышения значения 4095
 			ori		r16,(DAC_B|Buffer_on|Gain_1X|Active)	; буферизованный вход Vref + GAIN 1x
 			rcall	SPI_RW
 			lds		r16,DAC_CH_B+0			; младший байт
