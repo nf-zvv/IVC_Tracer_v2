@@ -1,5 +1,14 @@
 ;------------------------------------------------------------------------------
 ; Математические подпрограммы
+; 
+; (C) 2017-2020 Vitaliy Zinoviev
+; https://github.com/nf-zvv/IVC_Tracer_v2
+; 
+; History
+; =======
+; 29.07.2020 Bin3BCD16, hexToBcd, Bin2ToBCD4, Bin1ToBCD3, DEC_TO_STR7, 
+;            DEC_TO_STR5 перемещены в convert.asm
+; 
 ;------------------------------------------------------------------------------
 
 
@@ -64,7 +73,10 @@ mul16u:
 			adc		res2,r1			;...
 			adc		res3,r16
 			ret
-
+.undef res0
+.undef res1
+.undef res2
+.undef res3
 
 ;------------------------------------------------------------------------------
 ; Signed Division 32/32 = 32+32
@@ -265,285 +277,6 @@ DIV_4096_LOOP:
 			ret
 
 
-;------------------------------------------------------------------------------
-; Convert unsigned number to string
-; 
-; USED: r16*, r26*, r27*
-; CALL: 
-; IN: X - число [0 - 9999], [0x0000 - 0x270F]
-;     Y - pointer to null-terminating string
-; OUT: Y - pointer to null-terminating string
-;------------------------------------------------------------------------------
-DEC_TO_STR5:
-			LDI		r16, -1
-DEC_TO_STR5_1:
-			INC		r16
-			SUBI	r26, Low(1000)
-			SBCI	r27, High(1000)
-			BRSH	DEC_TO_STR5_1
-			SUBI	r26, Low(-1000)
-			SBCI	r27, High(-1000)
-			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r16		; сохранить код цифры
-			LDI		r16, -1
-DEC_TO_STR5_2:
-			INC		r16
-			SUBI	r26, Low(100)
-			SBCI	r27, High(100)
-			BRSH	DEC_TO_STR5_2
-			SUBI	r26, -100
-			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r16		; сохранить код цифры
-			LDI		r16, -1
-DEC_TO_STR5_3:
-			INC		r16
-			SUBI	r26, 10
-			BRSH	DEC_TO_STR5_3
-			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r16		; сохранить код цифры
-			SUBI	r26,-10
-			SUBI	r26,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r26		; сохранить код цифры
-			CLR		r16
-			ST		Y+,r16		; \0 - null-terminating string
-			ret
-
-
-;------------------------------------------------------------------------------
-; Convert signed number to string
-; 
-; USED: r16*, r26*, r27*, r28*, r29*
-; CALL: 
-; IN: X - число [0..65535], [0x0000..0xFFFF]
-;     Y - pointer to null-terminating string
-; OUT: Y - pointer to null-terminating string
-;------------------------------------------------------------------------------
-DEC_TO_STR7:
-			; определить знак
-			SBRC	r27,7
-			RJMP	DEC_TO_STR7_SIGN
-			LDI		r16,' '
-			ST		Y+,r16
-			RJMP	DEC_TO_STR7_START
-DEC_TO_STR7_SIGN:
-			ldi		r16,'-'
-			st		Y+,r16
-			; смена знака
-			com		r26
-			com		r27
-			subi	r26,low(-1)
-			sbci	r27,high(-1)
-DEC_TO_STR7_START:
-			LDI		r16, -1
-DEC_TO_STR7_0:
-			INC		r16
-			SUBI	r26, Low(10000)
-			SBCI	r27, High(10000)
-			BRSH	DEC_TO_STR7_0
-			SUBI	r26, Low(-10000)
-			SBCI	r27, High(-10000)
-			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r16		; сохранить код цифры
-			LDI		r16, -1
-DEC_TO_STR7_1:
-			INC		r16
-			SUBI	r26, Low(1000)
-			SBCI	r27, High(1000)
-			BRSH	DEC_TO_STR7_1
-			SUBI	r26, Low(-1000)
-			SBCI	r27, High(-1000)
-			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r16		; сохранить код цифры
-			LDI		r16, -1
-DEC_TO_STR7_2:
-			INC		r16
-			SUBI	r26, Low(100)
-			SBCI	r27, High(100)
-			BRSH	DEC_TO_STR7_2
-			SUBI	r26, -100
-			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r16		; сохранить код цифры
-			LDI		r16, -1
-DEC_TO_STR7_3:
-			INC		r16
-			SUBI	r26, 10
-			BRSH	DEC_TO_STR7_3
-			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r16		; сохранить код цифры
-			SUBI	r26,-10
-			SUBI	r26,-0x30	; преобразовать цифру в ASCII код
-			ST		Y+,r26		; сохранить код цифры
-			CLR		r16
-			ST		Y+,r16		; \0 - null-terminating string
-			RET
-
-
-
-;--------------------------------------------------------------
-; Преобразование двоичного однобайтового числа в BCD формат
-; Вход: r16
-; Выход: r8-r10 (BCD_1 - BCD_3)
-;--------------------------------------------------------------
-.def BCD_1 = r4
-.def BCD_2 = r5
-.def BCD_3 = r6
-Bin1ToBCD3:
-			LDIL	BCD_1, -1
-Bin1ToBCD3_1:
-			INC		BCD_1
-			SUBI	r16, 100
-			BRSH	Bin1ToBCD3_1
-			SUBI	r16, -100
-			LDIL	BCD_2, -1
-Bin1ToBCD3_2:
-			INC		BCD_2
-			SUBI	r16, 10
-			BRSH	Bin1ToBCD3_2
-			SUBI	r16, -10
-			MOV		BCD_3,r16
-			RET
-
-;------------------------------------------------------------------------------
-; Преобразование двоичного двухбайтового числа в BCD формат
-; Вход: X(r27:r26)
-; Выход: r11-r14 (BCD_4 - BCD_7)
-;------------------------------------------------------------------------------
-.def BCD_4 = r22
-.def BCD_5 = r23
-.def BCD_6 = r24
-.def BCD_7 = r25
-Bin2ToBCD4:
-			LDIL	BCD_4, -1
-Bin2ToBCD4_1:
-			INC		BCD_4
-			SUBI	r26, Low(1000)
-			SBCI	r27, High(1000)
-			BRSH	Bin2ToBCD4_1
-			SUBI	r26, Low(-1000)
-			SBCI	r27, High(-1000)
-			LDIL	BCD_5, -1
-Bin2ToBCD4_2:
-			INC		BCD_5
-			SUBI	r26, Low(100)
-			SBCI	r27, High(100)
-			BRSH	Bin2ToBCD4_2
-			SUBI	r26, -100
-			LDIL	BCD_6, -1
-Bin2ToBCD4_3:
-			INC		BCD_6
-			SUBI	r26, 10
-			BRSH	Bin2ToBCD4_3
-			SUBI	r26, -10
-			MOV		BCD_7,r26
-			RET
-
-
-;------------------------------------------------------------------------------
-; 2BIN to 5BCD
-; 16-bit binary to 5-digit packed BCD conversion (0..65535)
-; "shift-plus-3" method
-;
-; Source: https://www.avrfreaks.net/forum/16bit-binary-bcd
-;
-; IN: r17:r16 = HEX value
-; OUT: r20:r19:r18 = BCD value
-;------------------------------------------------------------------------------
-hexToBcd:
-			push	r16
-			push    r17
-			push    r21
-			push    r22
-			push    xl
-			push    xh
-			clr     r18
-			clr     r19
-			clr     r20
-			clr     xh
-			ldi     r21, 16
-hexToBcd1:
-			ldi     xl, 20 + 1
-hexToBcd2:
-			ld      r22, -x
-			subi    r22, -3
-			sbrc    r22, 3
-			st      x, r22
-			ld      r22, x
-			subi    r22, -0x30
-			sbrc    r22, 7
-			st      x, r22
-			cpi     xl, 18
-			brne    hexToBcd2
-			lsl     r16
-			rol     r17
-			rol     r18
-			rol     r19
-			rol     r20
-			dec     r21
-			brne    hexToBcd1
-			pop     xh
-			pop     xl
-			pop     r22
-			pop     r21
-			pop     r17
-			pop     r16
-			ret
-
-;------------------------------------------------------------------------------
-;*
-;* Bin3BCD == 24-bit Binary to BCD conversion
-;*
-;* fbin0:fbin1:fbin2  >>>  tBCD0:tBCD1:tBCD2:tBCD3
-;*	  hex			     dec
-;*     r16r17r18      >>>	r20r21r22r23
-;*
-;------------------------------------------------------------------------------
-.def	fbin0	=r22	; binary value byte 0 (LSB)
-.def	fbin1	=r23	; binary value byte 1
-.def	fbin2	=r24	; binary value byte 2 (MSB)
-.def	tBCD0	=r25	; BCD value digits 0 and 1
-.def	tBCD1	=r26	; BCD value digits 2 and 3
-.def	tBCD2	=r27	; BCD value digits 4 and 5
-.def	tBCD3	=r28	; BCD value digits 6 and 7 (MSD)
-
-Bin3BCD16:
-			ldi	tBCD3,0xfa		;initialize digits 7 and 6
-binbcd_107:
-			subi	tBCD3,-0x10		;
-			subi	fbin0,byte1(10000*1000) ;subit fbin,10^7
-			sbci	fbin1,byte2(10000*1000) ;
-			sbci	fbin2,byte3(10000*1000) ;
-			brcc	binbcd_107		;
-binbcd_106:	dec		tBCD3			;
-			subi	fbin0,byte1(-10000*100) ;addit fbin,10^6
-			sbci	fbin1,byte2(-10000*100) ;
-			sbci	fbin2,byte3(-10000*100) ;
-			brcs	binbcd_106		;
-			ldi		tBCD2,0xfa		;initialize digits 5 and 4
-binbcd_105:	subi	tBCD2,-0x10		;
-			subi	fbin0,byte1(10000*10)	;subit fbin,10^5
-			sbci	fbin1,byte2(10000*10)	;
-			sbci	fbin2,byte3(10000*10)	;
-			brcc	binbcd_105		;
-binbcd_104:	dec		tBCD2			;
-			subi	fbin0,byte1(-10000)	;addit fbin,10^4
-			sbci	fbin1,byte2(-10000)	;
-			sbci	fbin2,byte3(-10000)	;
-			brcs	binbcd_104		;
-			ldi		tBCD1,0xfa		;initialize digits 3 and 2
-binbcd_103:	subi	tBCD1,-0x10		;
-			subi	fbin0,byte1(1000)	;subiw fbin,10^3
-			sbci	fbin1,byte2(1000)	;
-			brcc	binbcd_103		;
-binbcd_102:	dec		tBCD1			;
-			subi	fbin0,byte1(-100)	;addiw fbin,10^2
-			sbci	fbin1,byte2(-100)	;
-			brcs	binbcd_102		;
-			ldi		tBCD0,0xfa		;initialize digits 1 and 0
-binbcd_101:	subi	tBCD0,-0x10		;
-			subi	fbin0,10		;subi fbin,10^1
-			brcc	binbcd_101		;
-			add		tBCD0,fbin0		;LSD
-			ret				;
 
 ;------------------------------------------------------------------------------
 ; End of file

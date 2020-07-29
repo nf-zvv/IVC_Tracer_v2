@@ -2,24 +2,20 @@
 ; Подпрограммы для работы со строками
 ;
 ; (C) 2017-2020 Vitaliy Zinoviev
-; https://github.com/nf-zvv/IVC_Tracer
+; https://github.com/nf-zvv/IVC_Tracer_v2
 ;
 ; History
 ; =======
 ; 24.02.2017
 ; 27.08.2017 доработки
-; 27.08.2017 добавлена STR_TO_UINT16
-; 24.07.2020 добавлена atoi
 ; 28.07.2020 переименованы IS_CHAR в IS_ALNUM, IS_LETTER в IS_ALPHA
 ;            добавлены IS_CHAR, IS_PRINT
-;
+; 29.07.2020 STR_TO_UINT16, atoi, STR_TO_UINT8 перемещены в convert.asm
+; 
 ;=============================================================================
 #ifndef _STRINGS_ASM_
 #define _STRINGS_ASM_
 
-
-.def WL   = r24
-.def WH   = r25
 
 ;-----------------------------------------------------------------------------
 ; Сравнение строк
@@ -207,7 +203,7 @@ NON_CHAR:
 ; Вычисление длины строки
 ; строка должна оканчиваться на 0 (zero-ended string)
 ; Признаком конца строки является символ 0
-; Используются: r16*, r17, Y (восстан.)
+; Используются: r16*, r17 (восстан.), Y (восстан.)
 ; Вход: Y - указатель на строку в ОЗУ
 ; Выход: r16
 ;-----------------------------------------------------------------------------
@@ -228,244 +224,6 @@ STR_LEN_EXIT:
 			pop		YL	; восстанавливаем указатель
 			ret
 
-
-;-----------------------------------------------------------------------------
-; Преобразование строки в число
-; Работает как с положительными (0...65535), 
-; так и с отрицательными числами (-32767...32767)
-; Как только встречается не число, преобразование завершается
-
-; 
-; Используются: r16*, r24*, r25*, r28*, r29*
-; Вход: Y (0-ended строка)
-; Выход: r25:r24
-;-----------------------------------------------------------------------------
-atoi:
-			clr		r24		; Очистить r24
-			clr		r25		; Очистить r25
-			clt
-atoi_1:
-			ld		r16,Y+
-			cpi		r16,0x20	; пробел
-			breq	atoi_1
-			cpi		r16,0x09
-			brcs	atoi_2
-			cpi		r16,0x0E
-			brcs	atoi_1
-atoi_2:
-			cpi		r16,'+'
-			breq	atoi_3
-			cpi		r16,'-'
-			brne	atoi_4
-			set
-			rjmp	atoi_3
-atoi_5:
-			rcall	mulhi_const_10
-			add		r24,r16
-			adc		r25,__zero_reg__
-atoi_3:
-			ld		r16,Y+
-atoi_4:
-			subi	r16,'0'	; переводим ASCII код цифры в число
-			cpi		r16,0x0A	; 10
-			brcs	atoi_5
-			brtc	atoi_exit
-			; если число отрицательное
-			com		r25
-			neg		r24
-			sbci	r25,0xFF
-atoi_exit:
-			ret
-
-
-;-----------------------------------------------------------------------------
-; Умножение на 10
-; 
-; Используются: r0*, r1*, r23*, r24*, r25*
-; Вход: r25:r24
-; Выход: r25:r24
-;-----------------------------------------------------------------------------
-mulhi_const_10:
-			ldi	r23,10
-			mul	r25,r23
-			mov	r25,r0
-			mul	r24,r23
-			mov	r24,r0
-			add	r25,r1
-			ret
-
-
-;-----------------------------------------------------------------------------
-; Преобразование строки в число
-; 0...65535
-; Используются: r16*, r24*, r25*, r28*, r29*
-; Вход: Y (0-ended строка)
-; Выход: r25:r24, r13
-;        r13 = 0 успешно
-;        r13 = 1 не число
-;        r13 = 2 слишком большое
-;-----------------------------------------------------------------------------
-.def tmpL = r22
-.def tmpH = r23
-STR_TO_UINT16:
-			clr		r24			; Обнуляем результат
-			clr		r25
-			rcall	STR_LEN		; Определяем длину строки
-			cpi		r16,1
-			breq	STR_TO_UINT16_1DIGIT
-			cpi		r16,2
-			breq	STR_TO_UINT16_2DIGIT
-			cpi		r16,3
-			breq	STR_TO_UINT16_3DIGIT
-			cpi		r16,4
-			breq	STR_TO_UINT16_4DIGIT
-			cpi		r16,5
-			breq	STR_TO_UINT16_5DIGIT
-			rjmp	STR_TO_UINT16_TOOBIG
-;--------------------
-STR_TO_UINT16_5DIGIT:
-			ld		r17,Y+
-			rcall	IS_DIGIT	; проверяем - цифра ли это
-			tst		r16
-			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цифры в число
-			ldi		tmpL,low(10000)
-			ldi		tmpH,high(10000)
-STR_TO_UINT16_LOOP5:
-			tst		r17
-			breq	STR_TO_UINT16_4DIGIT
-			add		WL,tmpL
-			adc		WH,tmpH
-			dec		r17
-			rjmp	STR_TO_UINT16_LOOP5
-;--------------------
-STR_TO_UINT16_4DIGIT:
-			ld		r17,Y+
-			rcall	IS_DIGIT	; проверяем - цифра ли это
-			tst		r16		
-			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цифры в число
-			ldi		tmpL,low(1000)
-			ldi		tmpH,high(1000)
-STR_TO_UINT16_LOOP4:
-			tst		r17
-			breq	STR_TO_UINT16_3DIGIT
-			add		WL,tmpL
-			adc		WH,tmpH
-			dec		r17
-			rjmp	STR_TO_UINT16_LOOP4
-;--------------------
-STR_TO_UINT16_3DIGIT:
-			ld		r17,Y+
-			rcall	IS_DIGIT	; проверяем - цифра ли это
-			tst		r16		
-			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цифры в число
-			ldi		tmpL,100
-			mul		r17,tmpL
-			add		WL,r0
-			adc		WH,r1
-;--------------------
-STR_TO_UINT16_2DIGIT:
-			ld		r17,Y+
-			rcall	IS_DIGIT	; проверяем - цифра ли это
-			tst		r16		
-			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цифры в число
-			ldi		tmpL,10
-			mul		r17,tmpL
-			add		WL,r0
-			adc		WH,r1
-;--------------------
-STR_TO_UINT16_1DIGIT:
-			ld		r17,Y+
-			rcall	IS_DIGIT	; проверяем - цифра ли это
-			tst		r16		
-			breq	STR_TO_UINT16_NONDIGIT
-			subi	r17,'0'	; переводим ASCII код цифры в число
-			clr		tmpL
-			add		WL,r17
-			adc		WH,tmpL
-			clr		r13		; статус - успех
-			ret
-STR_TO_UINT16_NONDIGIT:
-			ldi		r16,1
-			mov		r13,r16
-			ret
-STR_TO_UINT16_TOOBIG:
-			ldi		r16,2
-			mov		r13,r16
-			ret
-.undef tmpL
-.undef tmpH
-
-
-
-;-----------------------------------------------------------------------------
-; Преобразование строки в число
-; 0...255
-; Используются: r13*, r16*, r17*, r24* Y*
-; Вход: Y (0-ended строка)
-; Выход: r24, r13
-;        r13 = 0 успешно
-;        r13 = 1 не число
-;        r13 = 2 слишком большое
-; ЗАМЕЧАНИЕ! Примитивный код. Надо улучшить.
-;-----------------------------------------------------------------------------
-STR_TO_UINT8:
-			ld		r17,Y+
-			tst		r17
-			breq	str_end
-			rcall	IS_DIGIT	; проверяем - цифра ли это
-			tst		r16		
-			breq	str_to_uint8_nondigit
-			inc		r16			; подсчет длины числа
-			rjmp	STR_TO_UINT8
-str_end:
-			; оказались здесь, значит длина числа подсчитана
-			ld		r17,-Y	; считали /0 - символ конца строки
-
-			ld		r17,-Y	; считали первую цифру - единицы
-			subi	r17,'0'	; переводим ASCII код цифры в число
-			mov		WL,r17	; результат - единицы
-			dec		r16		; уменьшаем счетчик цифр
-			tst		r16		; не кончились ли цифры?
-			breq	str_to_uint8_finish
-
-			ld		r17,-Y	; считали вторую цифру - десятки
-			subi	r17,'0'	; переводим ASCII код цифры в число
-			ldi		r18,10
-			mul		r17,r18	; выполняем умножение на 10
-			add		WL,r0	; прибавляем к результату десятки
-			dec		r16		; уменьшаем счетчик цифр
-			tst		r16		; не кончились ли цифры?
-			breq	str_to_uint8_finish
-
-			ld		r17,-Y	; считали третью цифру - сотни
-			cpi		r17,3	; если три и больше - слишком много
-			brsh	str_to_uint8_too_big
-str_to_uint8_next:
-			subi	r17,'0'	; переводим ASCII код цифры в число
-			ldi		r18,100
-			mul		r17,r18	; выполняем умножение на 100
-			add		WL,r0	; прибавляем к результату сотни
-			brcs	str_to_uint8_too_big
-			dec		r16		; уменьшаем счетчик цифр
-			tst		r16		; не кончились ли цифры?
-			breq	str_to_uint8_finish
-			; если оказались тут, значит
-			; цифры так и не кончились - статус too big
-str_to_uint8_too_big:
-			ldi		r16,2
-			mov		r13,r16
-			ret
-str_to_uint8_nondigit:
-			ldi		r16,1
-			mov		r13,r16
-			ret
-str_to_uint8_finish:
-			clr		r13		; статус - успех
-			ret
 
 #endif  /* _STRINGS_ASM_ */
 
