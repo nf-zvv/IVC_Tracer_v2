@@ -1915,7 +1915,7 @@ VAH_LOOP_END:
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; Отправка результатов на компьютер по UART
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-			rcall	PRINT_IVC_DATA_TO_UART
+			rcall	PRINT_IVC_DATA_TO_UART_2
 			; Небольшая задержка
 			ldi		r16,250
 			call	WaitMiliseconds		; использует регистры r16 и X
@@ -2039,6 +2039,74 @@ PRINT_IVC_DATA_TO_UART_DEC:
 			cpc		r23,r13
 			brsh	PRINT_IVC_DATA_TO_UART_LOOP
 PRINT_IVC_DATA_TO_UART_EXIT:
+			ret
+
+
+;------------------------------------------------------------------------------
+; Отправка результатов на компьютер по UART
+; 
+; Вызовы: Calculate_current, Calculate_voltage, ITOA_FAST_DIV,
+;         STRING_TO_UART, uart_snt
+; Используются:
+; Вход: IVC_ARRAY - массив данных, r3 - число измерений
+; Выход: <UART>
+;------------------------------------------------------------------------------
+PRINT_IVC_DATA_TO_UART_2:
+			; Массив с данными
+			ldi		ZL,low(IVC_ARRAY)
+			ldi		ZH,high(IVC_ARRAY)
+PRINT_IVC_DATA_TO_UART_2_LOOP:
+			; Подготавливаем для вывода ток
+			ld		r16,Z+ ; Извлекаем младший байт АЦП
+			ld		r17,Z+ ; Извлекаем старший байт АЦП
+			call	Calculate_current ; (IN: r17:r16, OUT: r19:r18)
+			; USED: r0*, r1*, r16*, r17*, r18*, r19*, r20*, r21*, r22*, r23*, r24*, r25*
+
+			; Преобразовать число в строку
+			mov		XL,r18
+			mov		XH,r19
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
+			call	ITOA_FAST_DIV	; (IN: X(r27:r26) - число, Y(r29:r28) - указатель на буфер)
+			; USED: r18*, r19*, r20*, r21*, r23*, r26*, r27*, r28*, r29*
+
+			; Отправить строку по UART
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
+			rcall	STRING_TO_UART
+
+			; Разделитель - табуляция
+			ldi		r16,9
+			rcall	uart_snt
+
+			; Подготавливаем для вывода напряжение
+			ld		r16,Z+	; младший байт АЦП
+			ld		r17,Z+	; старший байт АЦП
+			call	Calculate_voltage ; (IN: r17:r16, OUT: r19:r18)
+			; USED: r0*, r1*, r16*, r17*, r18*, r19*, r20*, r21*, r22*, r23*, r24*, r25*
+
+			; Преобразовать число в строку
+			mov		XL,r18
+			mov		XH,r19
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
+			call	ITOA_FAST_DIV	; (IN: X(r27:r26) - число, Y(r29:r28) - указатель на буфер)
+			; USED: r18*, r19*, r20*, r21*, r23*, r26*, r27*, r28*, r29*
+
+			; Отправить строку по UART
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
+			rcall	STRING_TO_UART
+
+			; Конец строки
+			ldi		r16,13
+			rcall	uart_snt
+			ldi		r16,10
+			rcall	uart_snt
+
+			dec		r3	; уменьшить счетчик числа измерений
+			brne	PRINT_IVC_DATA_TO_UART_2_LOOP
+
 			ret
 
 
