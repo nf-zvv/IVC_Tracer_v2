@@ -634,7 +634,7 @@ DEC_DAC_SET:
 			lds		XH,DAC_CH_B+1
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
+			call	DEC_TO_STR5
 			; Вывести числа на дисплей
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
@@ -677,7 +677,7 @@ INC_DAC_SET:
 			lds		XH,DAC_CH_B+1
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
+			call	DEC_TO_STR5
 			; Вывести числа на дисплей
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
@@ -790,7 +790,7 @@ Event_update:
 			lds		XH,ADC_CH0+1
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
+			call	DEC_TO_STR5
 			; Вывести число на дисплей
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
@@ -803,7 +803,7 @@ Event_update:
 			mov		XH,r19
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR7
+			call	DEC_TO_STR7
 			; Установить координаты вывода
 			ldi		r18,1
 			ldi		r19,8
@@ -841,7 +841,7 @@ Event_update:
 			lds		XH,ADC_CH1+1
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
+			call	DEC_TO_STR5
 			; Вывести число на дисплей
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
@@ -854,7 +854,7 @@ Event_update:
 			mov		XH,r23
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR7
+			call	DEC_TO_STR7
 			; Установить координаты вывода
 			ldi		r18,1
 			ldi		r19,13
@@ -893,6 +893,8 @@ Event_update:
 .include "eeprom.asm"
 .include "math.asm"
 .include "simple_menu.asm"
+
+.include "convert.asm"
 
 .include "uart_funcs.asm"
 .include "strings.asm"

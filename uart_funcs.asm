@@ -110,6 +110,8 @@ STRING_TO_UART:
 			ld		r16,X+
 			tst		r16
 			breq	STRING_TO_UART_END	; end of string
+			cpi		r16,' '		; пробелы не выводим
+			breq	STRING_TO_UART
 			; Send data
 			rcall	uart_snt
 			rjmp	STRING_TO_UART

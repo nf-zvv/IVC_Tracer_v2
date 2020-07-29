@@ -494,7 +494,7 @@ main_scr_dec_dac_step:
 			mov		XH,r25
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
+			call	DEC_TO_STR5
 			; Установить координаты вывода
 			ldi		r18,11
 			ldi		r19,3
@@ -527,7 +527,7 @@ main_scr_inc_dac_step:
 			mov		XH,r25
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
+			call	DEC_TO_STR5
 			; Установить координаты вывода
 			ldi		r18,11
 			ldi		r19,3
@@ -1822,7 +1822,7 @@ VAH_LOOP:
 			rcall	DAC_SET_B
 			; 2. задержка после смены значения (для завершения перех. процессов)
 			ldi		r16,50
-			rcall	WaitMiliseconds		; [использует регистры r16 и X]
+			call	WaitMiliseconds		; [использует регистры r16 и X]
 			; 3. считываем значение каналов АЦП
 			call	ADC_RUN
 			; 4. схораняем результат в память
@@ -1878,9 +1878,9 @@ VAH_LOOP_END:
 			rcall	DAC_SET_B
 			; Небольшая задержка
 			ldi		r16,250
-			rcall	WaitMiliseconds		; использует регистры r16 и X
+			call	WaitMiliseconds		; использует регистры r16 и X
 			ldi		r16,250
-			rcall	WaitMiliseconds		; использует регистры r16 и X
+			call	WaitMiliseconds		; использует регистры r16 и X
 			sei
 			; Включаем таймер T1
 			; .....

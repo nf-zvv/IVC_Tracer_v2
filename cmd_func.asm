@@ -269,7 +269,8 @@ cmd_get_single_var:
 			movw	XL,r24
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			;call	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			call	ITOA_FAST_DIV
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
 			rcall	STRING_TO_UART ; (IN: X)
@@ -335,7 +336,8 @@ cmd_dac_show:
 			lds		XH,DAC_CH_B+1
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			;call	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			call	ITOA_FAST_DIV
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
 			rcall	STRING_TO_UART ; (IN: X)
@@ -355,7 +357,7 @@ cmd_dac_success:
 ; вывод значений переменных в терминал
 ;
 ; Вызовы: FLASH_CONST_TO_UART, STRING_TO_UART, UART_LF_CR, uart_snt, DEC_TO_STR5
-; Используются: r16*, r17*, r19*, r24*, r25*, X*, Y*, Z*
+; Используются: r16*, r17*, r22*, r24*, r25*, X*, Y*, Z*
 ; Вход: VAR_TABLE
 ;       r19 - количество элементов
 ; Выход: 
@@ -363,7 +365,7 @@ cmd_dac_success:
 GET_ALL_VARS:
 			ldi		r24,low(VAR_TABLE*2)
 			ldi		r25,high(VAR_TABLE*2)
-			ldi		r19,VAR_COUNT
+			ldi		r22,VAR_COUNT
 GET_ALL_VARS_LOOP:
 			movw	ZL,r24
 			; Извлекаем адрес имени переменной
@@ -372,6 +374,7 @@ GET_ALL_VARS_LOOP:
 			; Извлекаем адрес значения переменной
 			lpm		YL,Z+
 			lpm		YH,Z
+			; Выводим имя переменной
 			movw	ZL,r16
 			rcall	FLASH_CONST_TO_UART ; (IN: Z)
 			ldi		r16,'='
@@ -381,13 +384,14 @@ GET_ALL_VARS_LOOP:
 			ld		XH,Y
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			;call	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			call	ITOA_FAST_DIV
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
 			rcall	STRING_TO_UART ; (IN: X)
 			rcall	UART_LF_CR
 			adiw	r24,4
-			dec		r19
+			dec		r22
 			brne	GET_ALL_VARS_LOOP
 			ret
 
@@ -426,7 +430,8 @@ GET_VAR_KEY_VAL:
 			ld		XH,Y
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			call	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			;call	DEC_TO_STR5 ; (IN: X; OUT: Y)
+			call	ITOA_FAST_DIV
 			ldi		XL,low(STRING)
 			ldi		XH,high(STRING)
 			rcall	STRING_TO_UART ; (IN: X)
