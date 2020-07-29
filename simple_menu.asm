@@ -1648,7 +1648,7 @@ ivc_trace_scr_btn_press_4:
 			cpi		r16,4 ;  пункт "EXIT"
 			brne	ivc_trace_scr_btn_press_act
 			; TODO: проверить изменены ли переменные и сохранить их при необходимости
-			rcall	SAVE_IVC_VARS
+			rcall	EEPROM_SAVE_IVC_VARS
 			ldi		r16,MAIN_SCREEN_ID
 			sts		screen_ID,r16
 			lds		r16,Flags
@@ -1677,10 +1677,10 @@ ivc_trace_scr_btn_press_exit:
 ;------------------------------------------------------------------------------
 ; Сохранить переменные АВАХ в EEPROM, если они были изменены
 ;
-; IVC_DAC_START, IVC_DAC_END, IVC_DAC_STEP
+; IVC_DAC_START, IVC_DAC_END, IVC_DAC_STEP, VAH_DELAY
 ;
 ;------------------------------------------------------------------------------
-SAVE_IVC_VARS:
+EEPROM_SAVE_IVC_VARS:
 			; IVC_DAC_START
 			ldi		r16,low(E_IVC_DAC_START+0)
 			ldi		r17,high(E_IVC_DAC_START+0)
@@ -1733,6 +1733,25 @@ IVC_DAC_STEP_byte_1:
 			ldi		r17,high(E_IVC_DAC_STEP+1)
 			call	EERead
 			lds		r19,IVC_DAC_STEP+1
+			cp		r18,r19
+			breq	VAH_DELAY_byte_0
+			mov		r18,r19
+			call	EEWrite
+VAH_DELAY_byte_0:
+			; VAH_DELAY
+			ldi		r16,low(E_VAH_DELAY+0)
+			ldi		r17,high(E_VAH_DELAY+0)
+			call	EERead
+			lds		r19,VAH_DELAY+0
+			cp		r18,r19
+			breq	VAH_DELAY_byte_1
+			mov		r18,r19
+			call	EEWrite
+VAH_DELAY_byte_1:
+			ldi		r16,low(E_VAH_DELAY+1)
+			ldi		r17,high(E_VAH_DELAY+1)
+			call	EERead
+			lds		r19,VAH_DELAY+1
 			cp		r18,r19
 			breq	SAVE_IVC_VARS_EXIT
 			mov		r18,r19
@@ -1821,7 +1840,7 @@ VAH_LOOP:
 			sts		DAC_CH_B+1,r23
 			rcall	DAC_SET_B
 			; 2. задержка после смены значения (для завершения перех. процессов)
-			ldi		r16,50
+			lds		r16,VAH_DELAY
 			call	WaitMiliseconds		; [использует регистры r16 и X]
 			; 3. считываем значение каналов АЦП
 			call	ADC_RUN

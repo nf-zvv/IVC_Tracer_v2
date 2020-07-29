@@ -22,7 +22,7 @@
 #ifndef _CMD_FUNC_ASM_
 #define _CMD_FUNC_ASM_
 
-.equ	VAR_COUNT     = 15			; кол-во переменных (для команд SET и GET)
+.equ	VAR_COUNT     = 16			; кол-во переменных (для команд SET и GET)
 
 .dseg
 VAR_ID:		.byte 1
@@ -193,6 +193,7 @@ cmd_set_next:
 			rcall	GET_VAR_KEY_VAL ; (IN: VAR_ID)
 			; Сохраняем в EEPROM
 			call	EEPROM_SAVE_CALIBRATIONS
+			call	EEPROM_SAVE_IVC_VARS
 			clr		r13
 			ret
 cmd_set_error_arg:
@@ -482,6 +483,7 @@ DAC_STEP_var_name:			.db "DAC_STEP",0,0
 IVC_DAC_START_var_name:		.db "IVC_DAC_START",0
 IVC_DAC_END_var_name:		.db "IVC_DAC_END",0
 IVC_DAC_STEP_var_name:		.db "IVC_DAC_STEP",0,0
+VAH_DELAY_var_name:			.db "VAH_DELAY",0
 CH0_DELTA_var_name:			.db "CH0_DELTA",0
 CH1_DELTA_var_name:			.db "CH1_DELTA",0
 ADC_V_REF_var_name:			.db "ADC_V_REF",0
@@ -514,6 +516,7 @@ VAR_TABLE:
 .db low(IVC_DAC_START_var_name*2),high(IVC_DAC_START_var_name*2),low(IVC_DAC_START),high(IVC_DAC_START)
 .db low(IVC_DAC_END_var_name*2),  high(IVC_DAC_END_var_name*2),  low(IVC_DAC_END),  high(IVC_DAC_END)
 .db low(IVC_DAC_STEP_var_name*2), high(IVC_DAC_STEP_var_name*2), low(IVC_DAC_STEP), high(IVC_DAC_STEP)
+.db low(VAH_DELAY_var_name*2),    high(VAH_DELAY_var_name*2),    low(VAH_DELAY),    high(VAH_DELAY)
 .db low(CH0_DELTA_var_name*2),    high(CH0_DELTA_var_name*2),    low(CH0_DELTA),    high(CH0_DELTA)
 .db low(CH1_DELTA_var_name*2),    high(CH1_DELTA_var_name*2),    low(CH1_DELTA),    high(CH1_DELTA)
 .db low(ADC_V_REF_var_name*2),    high(ADC_V_REF_var_name*2),    low(ADC_V_REF),    high(ADC_V_REF)

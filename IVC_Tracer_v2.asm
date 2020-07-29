@@ -109,21 +109,22 @@
 .equ ENC_DDR      = DDRB
 .equ ENC_PIN      = PINB
 
-#define Default_DAC_STEP       0x0005 ; 5
+#define Default_DAC_STEP       32
 #define Default_IVC_DAC_START  0x03e8 ; 1000
 #define Default_IVC_DAC_END    0x0708 ; 1800
 #define Default_IVC_DAC_STEP   0x0064 ; 100
-#define Default_CH0_DELTA      0x09C4 ; 2500
-#define Default_CH1_DELTA      0x09C4 ; 2500
-#define Default_ADC_V_REF      0x1388 ; 5000
-#define Default_ACS712_KI      185
-#define Default_RESDIV_KU      6  ; 
+#define Default_VAH_DELAY      40
+#define Default_CH0_DELTA      2465
+#define Default_CH1_DELTA      2489
+#define Default_ADC_V_REF      4997
+#define Default_ACS712_KI      186
+#define Default_RESDIV_KU      8
 #define Default_ZERO_DAC       2048
-#define Default_VREF_DAC       2048
-#define Default_LIM_VOLT_NEG   0xA628 ; -23000 mV
-#define Default_LIM_VOLT_POS   0x59D8 ;  23000 mV
-#define Default_LIM_CURR_NEG   0xD8F0 ; -10000 mA
-#define Default_LIM_CURR_POS   0x2710 ;  10000 mA
+#define Default_VREF_DAC       1825
+#define Default_LIM_VOLT_NEG   -20000
+#define Default_LIM_VOLT_POS    20000
+#define Default_LIM_CURR_NEG   -7000
+#define Default_LIM_CURR_POS    7000
 
 ; Menu
 .equ MAIN_SCREEN_ID        = 0
@@ -138,6 +139,7 @@ E_DAC_STEP: 		.dw Default_DAC_STEP
 E_IVC_DAC_START:	.dw Default_IVC_DAC_START
 E_IVC_DAC_END:		.dw Default_IVC_DAC_END
 E_IVC_DAC_STEP:		.dw Default_IVC_DAC_STEP
+E_VAH_DELAY:		.dw Default_VAH_DELAY
 E_CH0_DELTA:		.dw Default_CH0_DELTA
 E_CH1_DELTA:		.dw Default_CH1_DELTA
 E_ADC_V_REF:		.dw Default_ADC_V_REF
@@ -164,6 +166,7 @@ DAC_STEP:		.byte	2
 IVC_DAC_START:	.byte	2
 IVC_DAC_END:	.byte	2
 IVC_DAC_STEP:	.byte	2
+VAH_DELAY:		.byte	2
 ; Калибровка
 CH0_DELTA:		.byte	2
 CH1_DELTA:		.byte	2
@@ -372,6 +375,7 @@ EEPROM_INIT:
 			EEPROM_WRITE_WORD E_IVC_DAC_START,Default_IVC_DAC_START
 			EEPROM_WRITE_WORD E_IVC_DAC_END,Default_IVC_DAC_END
 			EEPROM_WRITE_WORD E_IVC_DAC_STEP,Default_IVC_DAC_STEP
+			EEPROM_WRITE_WORD E_VAH_DELAY,Default_VAH_DELAY
 			EEPROM_WRITE_WORD E_CH0_DELTA,Default_CH0_DELTA
 			EEPROM_WRITE_WORD E_CH1_DELTA,Default_CH1_DELTA
 			EEPROM_WRITE_WORD E_ADC_V_REF,Default_ADC_V_REF
@@ -393,6 +397,7 @@ EEPROM_RESTORE_VAR:
 			EEPROM_READ_WORD E_IVC_DAC_START,IVC_DAC_START
 			EEPROM_READ_WORD E_IVC_DAC_END,IVC_DAC_END
 			EEPROM_READ_WORD E_IVC_DAC_STEP,IVC_DAC_STEP
+			EEPROM_READ_WORD E_VAH_DELAY,VAH_DELAY
 			EEPROM_READ_WORD E_CH0_DELTA,CH0_DELTA
 			EEPROM_READ_WORD E_CH1_DELTA,CH1_DELTA
 			EEPROM_READ_WORD E_ADC_V_REF,ADC_V_REF
@@ -803,7 +808,8 @@ Event_update:
 			mov		XH,r19
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			call	DEC_TO_STR7
+			;call	DEC_TO_STR7
+			call	ITOA_FAST_DIV
 			; Установить координаты вывода
 			ldi		r18,1
 			ldi		r19,8
@@ -854,7 +860,8 @@ Event_update:
 			mov		XH,r23
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
-			call	DEC_TO_STR7
+			;call	DEC_TO_STR7
+			call	ITOA_FAST_DIV
 			; Установить координаты вывода
 			ldi		r18,1
 			ldi		r19,13
