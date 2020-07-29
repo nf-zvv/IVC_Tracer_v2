@@ -138,6 +138,10 @@ __negsi2:
 ;      r25:r24:r23:r22 - Remainder
 ;------------------------------------------------------------------------------
 __udivmodsi4:
+			push	r26
+			push	r27
+			push	r30
+			push	r31
 			ldi		r26, 0x21	; 33
 			mov		r1, r26
 			sub		r26, r26
@@ -173,6 +177,10 @@ __udivmodsi4_ep:
 			movw	r20, r24
 			movw	r22, r26
 			movw	r24, r30
+			pop		r31
+			pop		r30
+			pop		r27
+			pop		r26
 			ret
 
 
