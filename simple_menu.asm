@@ -1334,6 +1334,8 @@ calib_scr_update:
 			;..................................................................
 			; Вывести реальные значение тока и напряжения
 			; ........... Ток ...........
+			lds		r16,ADC_CH0+0
+			lds		r17,ADC_CH0+1
 			rcall	Calculate_current ; ADC_code -> mA
 			; convert digit to string
 			mov		XL,r18
@@ -1350,6 +1352,8 @@ calib_scr_update:
 			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			; ........ Напряжение ........
+			lds		r16,ADC_CH1+0
+			lds		r17,ADC_CH1+1
 			rcall	Calculate_voltage ; ADC_code -> mV
 			; Установить координаты вывода
 			ldi		r18,16
@@ -1863,9 +1867,9 @@ VAH_LOOP:
 			lds		r16,ADC_CH0+0
 			st		Y+,r16
 			; 6. схораняем результат в IVC_ARRAY
-			lds		r16,ADC_CH2+1
+			lds		r16,ADC_CH1+1
 			st		Y+,r16
-			lds		r16,ADC_CH2+0
+			lds		r16,ADC_CH1+0
 			st		Y+,r16
 			; Увеличиваем счетчик числа измерений
 			inc		r3
@@ -1915,7 +1919,7 @@ VAH_LOOP_END:
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; Отправка результатов на компьютер по UART
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-			rcall	PRINT_IVC_DATA_TO_UART_2
+			rcall	PRINT_IVC_DATA_TO_UART
 			; Небольшая задержка
 			ldi		r16,250
 			call	WaitMiliseconds		; использует регистры r16 и X
@@ -1933,129 +1937,17 @@ VAH_LOOP_END:
 ;------------------------------------------------------------------------------
 ; Отправка результатов на компьютер по UART
 ; 
-; Вызовы: DEC_TO_STR5, DEC_TO_STR7, Calculate_current, Calculate_voltage, 
-;         STRING_TO_UART
-; Используются:
-; Вход: IVC_ARRAY
-; Выход: <UART>
-;------------------------------------------------------------------------------
-PRINT_IVC_DATA_TO_UART:
-			; Загружаем начальные значения
-			lds		r22,IVC_DAC_START+0
-			lds		r23,IVC_DAC_START+1
-			lds		r24,IVC_DAC_STEP+0
-			lds		r25,IVC_DAC_STEP+1
-			lds		r12,IVC_DAC_END+0
-			lds		r13,IVC_DAC_END+1
-			; Массив с данными
-			ldi		ZL,low(IVC_ARRAY)
-			ldi		ZH,high(IVC_ARRAY)
-			; Сравниваем начальное и конечное значение ЦАП
-			cp		r22,r12
-			cpc		r23,r13
-			brlo	PRINT_IVC_DATA_TO_UART_FORWARD
-			ldi		r16,0
-			mov		r4,r16     ; если IVC_DAC_START > IVC_DAC_END
-			rjmp	PRINT_IVC_DATA_TO_UART_LOOP
-PRINT_IVC_DATA_TO_UART_FORWARD:
-			ldi		r16,1
-			mov		r4,r16     ; если IVC_DAC_START < IVC_DAC_END
-PRINT_IVC_DATA_TO_UART_LOOP:
-			; Подготавливаем для вывода DAC
-			mov		XL,r22
-			mov		XH,r23
-			ldi		YL,low(STRING)
-			ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
-			; Надо удалить последний символ в строке! Там 0 стоит
-			;ld		r16,-Y
-			sbiw	Y,1
-			; Разделитель - табуляция
-			ldi		r16,9
-			st		Y+,r16
-			; Подготавливаем для вывода ток
-			ld		r16,Z+ ; Извлекаем младший байт АЦП
-			ld		r17,Z+ ; Извлекаем старший байт АЦП
-			call	Calculate_current ; (IN: r17:r16, OUT: r19:r18)
-			; Преобразовать в строку
-			mov		XL,r18
-			mov		XH,r19
-			;ldi		YL,low(STRING)
-			;ldi		YH,high(STRING)
-			rcall	DEC_TO_STR7
-			; Надо удалить последний символ в строке! Там 0 стоит
-			;ld		r16,-Y
-			sbiw	Y,1
-			; Разделитель - табуляция
-			ldi		r16,9
-			st		Y+,r16
-			; Подготавливаем для вывода напряжение
-			ld		r16,Z+	; младший байт АЦП
-			ld		r17,Z+	; старший байт АЦП
-			call	Calculate_voltage ; (IN: r17:r16, OUT: r19:r18)
-			; Преобразовать в строку
-			mov		XL,r18
-			mov		XH,r19
-			;ldi		YL,low(STRING)
-			;ldi		YH,high(STRING)
-			rcall	DEC_TO_STR5
-			; Надо удалить последний символ в строке! Там 0 стоит
-			;ld		r16,-Y
-			sbiw	Y,1
-			; Конец строки
-			ldi		r16,13
-			st		Y+,r16
-			ldi		r16,10
-			st		Y+,r16
-			clr		r16
-			st		Y+,r16
-			; Отправить число по UART
-			ldi		XL,low(STRING)
-			ldi		XH,high(STRING)
-			rcall	STRING_TO_UART
-			; Теперь нужно увеличить или уменьшить r23:r22
-			; Проверить не превысило ли, или наоборот, не стало ли ниже конечного значения
-			; И при необходимости вернуться на исходную метку
-			tst		r4
-			brne	PRINT_IVC_DATA_TO_UART_INC
-			breq	PRINT_IVC_DATA_TO_UART_DEC
-PRINT_IVC_DATA_TO_UART_INC:
-			; Либо это:
-			; r23:r22 = r23:r22 + r25:r24
-			add		r22,r24
-			adc		r23,r25
-			; Сравниваем текущее и конечное значение ЦАП
-			cp		r22,r12
-			cpc		r23,r13
-			brlo	PRINT_IVC_DATA_TO_UART_LOOP
-			rjmp	PRINT_IVC_DATA_TO_UART_EXIT
-PRINT_IVC_DATA_TO_UART_DEC:
-			; Либо вот это:
-			; r23:r22 = r23:r22 - r25:r24
-			sub		r22,r24
-			sbc		r23,r25
-			; Сравниваем текущее и конечное значение ЦАП
-			cp		r22,r12
-			cpc		r23,r13
-			brsh	PRINT_IVC_DATA_TO_UART_LOOP
-PRINT_IVC_DATA_TO_UART_EXIT:
-			ret
-
-
-;------------------------------------------------------------------------------
-; Отправка результатов на компьютер по UART
-; 
 ; Вызовы: Calculate_current, Calculate_voltage, ITOA_FAST_DIV,
 ;         STRING_TO_UART, uart_snt
 ; Используются:
 ; Вход: IVC_ARRAY - массив данных, r3 - число измерений
 ; Выход: <UART>
 ;------------------------------------------------------------------------------
-PRINT_IVC_DATA_TO_UART_2:
+PRINT_IVC_DATA_TO_UART:
 			; Массив с данными
 			ldi		ZL,low(IVC_ARRAY)
 			ldi		ZH,high(IVC_ARRAY)
-PRINT_IVC_DATA_TO_UART_2_LOOP:
+PRINT_IVC_DATA_TO_UART_LOOP:
 			; Подготавливаем для вывода ток
 			ld		r16,Z+ ; Извлекаем младший байт АЦП
 			ld		r17,Z+ ; Извлекаем старший байт АЦП
@@ -2105,7 +1997,7 @@ PRINT_IVC_DATA_TO_UART_2_LOOP:
 			rcall	uart_snt
 
 			dec		r3	; уменьшить счетчик числа измерений
-			brne	PRINT_IVC_DATA_TO_UART_2_LOOP
+			brne	PRINT_IVC_DATA_TO_UART_LOOP
 
 			ret
 

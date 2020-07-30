@@ -710,8 +710,8 @@ INC_DAC_SET:
 Calculate_current:
 			; Преобразование кода АЦП в милливольты
 			; Умножить на значение опорного напряжения в мВ
-			lds		r16,ADC_CH0+0
-			lds		r17,ADC_CH0+1
+			;lds		r16,ADC_CH0+0
+			;lds		r17,ADC_CH0+1
 			lds		r18,ADC_V_REF+0
 			lds		r19,ADC_V_REF+1
 			rcall	mul16u   ; (IN: r17:r16, r19:r18, OUT: r25:r24:r23:r22)
@@ -750,8 +750,8 @@ Calculate_current:
 Calculate_voltage:
 			; Преобразование кода АЦП в милливольты
 			; Умножить на значение опорного напряжения в мВ
-			lds		r16,ADC_CH1+0
-			lds		r17,ADC_CH1+1
+			;lds		r16,ADC_CH1+0
+			;lds		r17,ADC_CH1+1
 			lds		r18,ADC_V_REF+0
 			lds		r19,ADC_V_REF+1
 			rcall	mul16u   ; (IN: r17:r16, r19:r18, OUT: r25:r24:r23:r22)
@@ -801,6 +801,8 @@ Event_update:
 			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			
+			lds		r16,ADC_CH0+0
+			lds		r17,ADC_CH0+1
 			rcall	Calculate_current
 
 			; convert digit to string
@@ -853,6 +855,8 @@ Event_update:
 			ldi		XH,high(STRING)
 			call	T6963C_WriteString
 			
+			lds		r16,ADC_CH1+0
+			lds		r17,ADC_CH1+1
 			rcall	Calculate_voltage
 
 			; convert digit to string
