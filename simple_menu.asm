@@ -1862,14 +1862,14 @@ VAH_LOOP:
 			; 3. считываем значение каналов АЦП
 			call	ADC_RUN
 			; 4. схораняем результат в память
-			lds		r16,ADC_CH0+1
-			st		Y+,r16
 			lds		r16,ADC_CH0+0
 			st		Y+,r16
-			; 6. схораняем результат в IVC_ARRAY
-			lds		r16,ADC_CH1+1
+			lds		r16,ADC_CH0+1
 			st		Y+,r16
+			; 6. схораняем результат в IVC_ARRAY
 			lds		r16,ADC_CH1+0
+			st		Y+,r16
+			lds		r16,ADC_CH1+1
 			st		Y+,r16
 			; Увеличиваем счетчик числа измерений
 			inc		r3
@@ -1904,11 +1904,9 @@ VAH_LOOP_END:
 			sts		DAC_CH_B+0,r16
 			rcall	DAC_SET_B
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; Вывести на дисплей количество снятых точек
+; Вывести на дисплей статус "Передача данных"
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 			; В r3 лежит количество измерений
-			;mov		r16,r3
-			;rcall	Bin1ToBCD3
 			; Установить координаты вывода
 			ldi		r18,9
 			ldi		r19,8
@@ -1919,7 +1917,27 @@ VAH_LOOP_END:
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; Отправка результатов на компьютер по UART
 ;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+			push	r3	; количество измерений
 			rcall	PRINT_IVC_DATA_TO_UART
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; Вывести на дисплей количество снятых точек
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+			ldi		r18,9
+			ldi		r19,8
+			call	T6963C_TextGoTo
+			ldi		ZL,low(2*STR_IVC_S_POINTS)
+			ldi		ZH,high(2*STR_IVC_S_POINTS)
+			call	T6963C_WriteStringPgm
+			pop		r16	; количество измерений
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
+			rcall	DEC_TO_STR4
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
+			call	T6963C_WriteString
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; Завершение
+;++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 			; Небольшая задержка
 			ldi		r16,250
 			call	WaitMiliseconds		; использует регистры r16 и X
@@ -1974,12 +1992,12 @@ PRINT_IVC_DATA_TO_UART_LOOP:
 			; Подготавливаем для вывода напряжение
 			ld		r16,Z+	; младший байт АЦП
 			ld		r17,Z+	; старший байт АЦП
-			call	Calculate_voltage ; (IN: r17:r16, OUT: r19:r18)
+			call	Calculate_voltage ; (IN: r17:r16, OUT: r23:r22)
 			; USED: r0*, r1*, r16*, r17*, r18*, r19*, r20*, r21*, r22*, r23*, r24*, r25*
 
 			; Преобразовать число в строку
-			mov		XL,r18
-			mov		XH,r19
+			mov		XL,r22
+			mov		XH,r23
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
 			call	ITOA_FAST_DIV	; (IN: X(r27:r26) - число, Y(r29:r28) - указатель на буфер)
@@ -2000,7 +2018,6 @@ PRINT_IVC_DATA_TO_UART_LOOP:
 			brne	PRINT_IVC_DATA_TO_UART_LOOP
 
 			ret
-
 
 
 ;------------------------------------------------------------------------------
@@ -2903,8 +2920,9 @@ STR_DAC_START:       .db "DAC_START:",0,0
 STR_DAC_END:         .db "DAC_END:",0,0
 STR_EXIT:            .db "EXIT",0,0
 STR_IVC_STATUS:      .db "Статус:",0
-STR_IVC_S_MEASURE:   .db "измерение",0
-STR_IVC_S_TRANSMIT:  .db "передача данных",0
+STR_IVC_S_MEASURE:   .db "измерение          ",0
+STR_IVC_S_TRANSMIT:  .db "передача данных    ",0
+STR_IVC_S_POINTS:    .db "передано точек: ",0,0
 
 STR_LIMITS:          .db "Лимиты",0,0
 STR_LIM_VOLT_NEG:    .db "LIM_VOLT_NEG",0,0

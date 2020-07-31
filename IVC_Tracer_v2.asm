@@ -704,14 +704,12 @@ INC_DAC_SET:
 
 ; TODO: сделать округление (ADC_code * ADC_V_REF / 4096)
 
-; IN: ADC_CH0
-; OUT: r19:r18
+; IN: r17:r16 - ADC_code
+; OUT: r19:r18 - mA
 ;------------------------------------------------------------------------------
 Calculate_current:
 			; Преобразование кода АЦП в милливольты
 			; Умножить на значение опорного напряжения в мВ
-			;lds		r16,ADC_CH0+0
-			;lds		r17,ADC_CH0+1
 			lds		r18,ADC_V_REF+0
 			lds		r19,ADC_V_REF+1
 			rcall	mul16u   ; (IN: r17:r16, r19:r18, OUT: r25:r24:r23:r22)
@@ -744,14 +742,13 @@ Calculate_current:
 ; 
 ; Voltage_mV = (CH1_DELTA - (ADC_code * ADC_V_REF / 4096) ) * RESDIV_KU
 ; 
-; IN: ADC_CH1
-; OUT: r23:r22
+; IN: r17:r16 - ADC_code
+; OUT: r23:r22 - mV
 ;------------------------------------------------------------------------------
 Calculate_voltage:
 			; Преобразование кода АЦП в милливольты
 			; Умножить на значение опорного напряжения в мВ
-			;lds		r16,ADC_CH1+0
-			;lds		r17,ADC_CH1+1
+
 			lds		r18,ADC_V_REF+0
 			lds		r19,ADC_V_REF+1
 			rcall	mul16u   ; (IN: r17:r16, r19:r18, OUT: r25:r24:r23:r22)
