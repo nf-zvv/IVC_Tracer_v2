@@ -133,6 +133,38 @@ UTOA_FAST_DIV_EXIT:
 			ret
 
 
+;--------------------------------------------------------------
+; Преобразование двоичного однобайтового числа в строку
+; 
+; Используются: r16*, r17*
+; Вход: r16 - число [0 - 255]
+;       Y - pointer to null-terminating string
+; Выход: Y - pointer to null-terminating string
+;--------------------------------------------------------------
+DEC_TO_STR4:
+			LDI		r17, -1
+DEC_TO_STR4_1:
+			INC		r17
+			SUBI	r16, 100
+			BRSH	DEC_TO_STR4_1
+			SUBI	r16, -100
+			SUBI	r17,-0x30	; преобразовать цифру в ASCII код
+			ST		Y+,r17
+			LDI		r17, -1
+DEC_TO_STR4_2:
+			INC		r17
+			SUBI	r16, 10
+			BRSH	DEC_TO_STR4_2
+			SUBI	r17,-0x30	; преобразовать цифру в ASCII код
+			ST		Y+,r17
+			SUBI	r16, -10
+			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
+			ST		Y+,r16
+			CLR		r16
+			ST		Y+,r16		; \0 - null-terminating string
+			RET
+
+
 ;------------------------------------------------------------------------------
 ; Convert unsigned number to string
 ; 
