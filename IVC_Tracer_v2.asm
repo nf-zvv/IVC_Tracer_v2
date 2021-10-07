@@ -183,6 +183,12 @@ LIM_CURR_POS:	.byte	2
 ; Menu
 menu_ID:    	.byte	1 ; идентификатор текущего пункта меню
 screen_ID:  	.byte	1 ; идентификатор текущего экрана
+; Measured values
+VOLTAGE_MV:		.byte	2	; 
+CURRENT_MA:		.byte	2	; 
+POWER_MW:		.byte	2	; 
+RES_OHM_INT:	.byte	2	; 
+RES_OHM_FRAC:	.byte	2	; 
 ;------------------------
 IVC_ARRAY:		.byte	2*2*IVC_MAX_RECORDS
 ;------------------------
@@ -690,91 +696,6 @@ INC_DAC_SET:
 			ret
 
 
-
-;------------------------------------------------------------------------------
-; Преобразование кода АЦП в миллиамперы
-;
-; Current_mA = (((ADC_code * ADC_V_REF / 4096) - CH0_DELTA) * 1000) / ACS712_KI
-; 
-; Умножение на 1000 здесь необходимо из-за того, что коэффициент ACS712_KI 
-; переводит значение из мВ в А, а нам нужны мА.
-;
-; MCP3204 - 12-битный АЦП. Максимальное значение ADC_code = 4095
-; Опорное напряжение АЦП ADC_V_REF = 5000 мВ
-
-; TODO: сделать округление (ADC_code * ADC_V_REF / 4096)
-
-; IN: r17:r16 - ADC_code
-; OUT: r19:r18 - mA
-;------------------------------------------------------------------------------
-Calculate_current:
-			; Преобразование кода АЦП в милливольты
-			; Умножить на значение опорного напряжения в мВ
-			lds		r18,ADC_V_REF+0
-			lds		r19,ADC_V_REF+1
-			rcall	mul16u   ; (IN: r17:r16, r19:r18, OUT: r25:r24:r23:r22)
-			; Поделить на разрядность АЦП
-			rcall	DIV_4096 ; (IN, OUT: r25:r24:r23:r22)
-			; Вычесть смещение
-			mov		r20,r22
-			mov		r21,r23
-			lds		r24,CH0_DELTA+0
-			lds		r25,CH0_DELTA+1
-			sub		r20,r24
-			sbc		r21,r25
-			; Умножение на 1000
-			; IN: r21:r20, r19:r18
-			; OUT: r25:r24:r23:r22
-			ldi		r18,low(1000)
-			ldi		r19,high(1000)
-			rcall	muls16x16_32
-			; Деление
-			lds		r18,ACS712_KI
-			ldi		r19,0x00	; 0
-			ldi		r20,0x00	; 0
-			ldi		r21,0x00	; 0
-			rcall	__divmodsi4 ; (OUT: r21:r20:r19:r18)
-			ret
-
-
-;------------------------------------------------------------------------------
-; Преобразование кода АЦП в милливольты
-; 
-; Voltage_mV = (CH1_DELTA - (ADC_code * ADC_V_REF / 4096) ) * RESDIV_KU
-; 
-; IN: r17:r16 - ADC_code
-; OUT: r23:r22 - mV
-;------------------------------------------------------------------------------
-Calculate_voltage:
-			; Преобразование кода АЦП в милливольты
-			; Умножить на значение опорного напряжения в мВ
-
-			lds		r18,ADC_V_REF+0
-			lds		r19,ADC_V_REF+1
-			rcall	mul16u   ; (IN: r17:r16, r19:r18, OUT: r25:r24:r23:r22)
-			; Поделить на разрядность АЦП
-			rcall	DIV_4096 ; (IN, OUT: r25:r24:r23:r22)
-			; Вычесть смещение
-			; r21:r20 = r21:r20 - r25:r24
-			lds		r20,CH1_DELTA+0
-			lds		r21,CH1_DELTA+1
-			mov		r24,r22
-			mov		r25,r23
-			;mov		r20,r22
-			;mov		r21,r23
-			;lds		r24,CH1_DELTA+0
-			;lds		r25,CH1_DELTA+1
-			sub		r20,r24
-			sbc		r21,r25
-			; Умножить на коэффициент делителя напряжения
-			; IN: r21:r20, r19:r18
-			; OUT: r25:r24:r23:r22
-			lds		r18,RESDIV_KU
-			ldi		r19,0
-			rcall	muls16x16_32
-			ret
-
-
 ;------------------------------------------------------------------------------
 ;
 ;
@@ -803,8 +724,8 @@ Event_update:
 			rcall	Calculate_current
 
 			; convert digit to string
-			mov		XL,r18
-			mov		XH,r19
+			lds		XH,CURRENT_MA+1
+			lds		XL,CURRENT_MA+0
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
 			;call	DEC_TO_STR7
@@ -857,8 +778,8 @@ Event_update:
 			rcall	Calculate_voltage
 
 			; convert digit to string
-			mov		XL,r22
-			mov		XH,r23
+			lds		XH,VOLTAGE_MV+1
+			lds		XL,VOLTAGE_MV+0
 			ldi		YL,low(STRING)
 			ldi		YH,high(STRING)
 			;call	DEC_TO_STR7
@@ -893,7 +814,7 @@ Event_update:
 			;sei
 			ret
 
-
+.include "IVC_calc.asm"
 
 .include "spi_hw.asm"
 .include "MCP320x.asm"
