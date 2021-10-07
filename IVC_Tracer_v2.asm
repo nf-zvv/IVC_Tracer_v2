@@ -897,7 +897,7 @@ Event_update:
 
 .include "spi_hw.asm"
 .include "MCP320x.asm"
-.include "MCP492x.asm"
+.include "MCP492x_2DAC.asm"
 .include "eeprom.asm"
 .include "math.asm"
 .include "simple_menu.asm"
