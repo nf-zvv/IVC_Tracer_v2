@@ -704,6 +704,8 @@ Event_update:
 			;cli
 			rcall	ADC_RUN
 			;------------------------------------------------------
+			; Вывести ток
+			;------------------------------------------------------
 			; Установить координаты вывода
 			ldi		r18,1
 			ldi		r19,9
@@ -758,6 +760,8 @@ Event_update:
 			sub		r19,r20 ; y
 			call	T6963C_VertLine ; (IN: r18 - x, r19 - y, r20 - height)
 			;------------------------------------------------------
+			; Вывести напряжение
+			;------------------------------------------------------
 			; Установить координаты вывода
 			ldi		r18,1
 			ldi		r19,14
@@ -811,8 +815,60 @@ Event_update:
 			ldi		r19,127
 			sub		r19,r20 ; y
 			call	T6963C_VertLine ; (IN: r18 - x, r19 - y, r20 - height)
+			;------------------------------------------------------
+			; Вывести значение мощности
+			;------------------------------------------------------
+			call	Calculate_power
+			; convert digit to string
+			lds		XH,POWER_MW+1
+			lds		XL,POWER_MW+0
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
+			call	ITOA_FAST_DIV
+
+			; отформатировать число
+			; IN: STRING
+			rcall	format_number
+
+			; Установить координаты вывода
+			ldi		r18,18
+			ldi		r19,2
+			call	T6963C_TextGoTo
+			; Вывести число на дисплей
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
+			call	T6963C_WriteString
+			
+			;------------------------------------------------------
+			; Вывести значение сопротивления
+			;------------------------------------------------------
+			call	Calculate_resistance
+			; convert digit to string
+			ldi		YL,low(STRING)
+			ldi		YH,high(STRING)
+			call	RES_TO_STR
+
+			; Установить координаты вывода
+			ldi		r18,18
+			ldi		r19,3
+			call	T6963C_TextGoTo
+			; Вывести число на дисплей
+			ldi		XL,low(STRING)
+			ldi		XH,high(STRING)
+			call	T6963C_WriteString
+
+
 			;sei
 			ret
+
+;------------------------------------------------------------------------------
+; IN: STRING
+;------------------------------------------------------------------------------
+format_number:
+			
+			
+			ret
+
 
 .include "IVC_calc.asm"
 

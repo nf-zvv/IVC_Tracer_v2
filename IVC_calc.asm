@@ -108,8 +108,8 @@ Calculate_voltage:
 ; 
 ; Power_mW = Voltage_mV * Current_mA / 1000
 ; 
-; IN:  
-; OUT: 
+; IN:  VOLTAGE_MV, CURRENT_MA
+; OUT: POWER_MW
 ;------------------------------------------------------------------------------
 Calculate_power:
 			
@@ -152,6 +152,14 @@ Calculate_resistance:
 			lds		r20,VOLTAGE_MV+0
 			lds		r19,CURRENT_MA+1
 			lds		r18,CURRENT_MA+0
+
+			; Проверить ток на ноль!!!
+			; (деление на ноль)
+			ldi		r17,0
+			ldi		r16,0
+			cp		r18,r16
+			cpc		r19,r17
+			breq	ZERO_DIVISION
 			
 			; First of all need to drop the sign
 			; of voltage and current
@@ -169,7 +177,7 @@ Calculate_resistance:
 			; убираем знак
 			com		r25
 			neg		r24
-			sbci	r25
+			sbci	r25,0xFF
 Calculate_resistance_1:
 			ldi		r21,0x00
 			ldi		r20,0x00
@@ -181,7 +189,7 @@ Calculate_resistance_1:
 			; убираем знак
 			com		r19
 			neg		r18
-			sbci	r19
+			sbci	r19,0xFF
 Calculate_resistance_2:
 			call	__udivmodsi4 ; (OUT: r21:r20:r19:r18)
 			; r21:r20 - integer part of number
@@ -198,7 +206,12 @@ Calculate_resistance_2:
 			sts		RES_OHM_FRAC+0,r22
 
 			ret
-
+ZERO_DIVISION:
+			ldi		r21,high(9999)
+			ldi		r20,low(9999)
+			sts		RES_OHM_INT+1,r21
+			sts		RES_OHM_INT+0,r20
+			ret
 
 
 ;------------------------------------------------------------------------------
@@ -278,3 +291,142 @@ fp10b_next_bit_9:
 			adc		r23,r25
 fp10b_exit:
 			ret
+
+
+;------------------------------------------------------------------------------
+; Convert resistance to string
+; IN: RES_OHM_INT, RES_OHM_FRAC
+; OUT: Y - pointer to null-terminating string
+;------------------------------------------------------------------------------
+RES_TO_STR:
+			
+
+
+			; Сначала разбираемся в целой частью
+			lds		r27,RES_OHM_INT+1
+			lds		r26,RES_OHM_INT+0
+			; Проверяем случай, когда ток равен нулю
+			ldi		r17,high(9999)
+			ldi		r16,low(9999)
+			cp		r26,r16
+			cpc		r27,r17
+			brne	RES_TO_STR_OK
+			rjmp	RES_TO_STR_DASH
+RES_TO_STR_OK:
+			; Надо проверить, что вычисленное значение не больше 1000
+			ldi		r17,high(1000)
+			ldi		r16,low(1000)
+			cp		r26,r16
+			cpc		r27,r17
+			brsh	RES_TO_STR_BIG
+
+			; начинаем преобразовывать
+			; Сотни
+			LDI		r16, -1
+RES_TO_STR_1:
+			INC		r16
+			SUBI	r26, Low(100)
+			SBCI	r27, High(100)
+			BRSH	RES_TO_STR_1
+			SUBI	r26, -100
+			TST		r16		; проверка на 0
+			BRNE	RES_TO_STR_1_NONZERO
+			LDI		r16,' '
+			CLT
+			RJMP	RES_TO_STR_1_SAVE
+RES_TO_STR_1_NONZERO:
+			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
+			SET
+RES_TO_STR_1_SAVE:
+			ST		Y+,r16		; сохранить код цифры
+			; Десятки
+			LDI		r16, -1
+RES_TO_STR_2:
+			INC		r16
+			SUBI	r26, 10
+			BRSH	RES_TO_STR_2
+			SUBI	r26,-10
+			BRTS	RES_TO_STR_2_NONZERO	; если флаг Т установлен, значит пропускаем
+			TST		r16		; проверка на 0
+			BRNE	RES_TO_STR_2_NONZERO
+			LDI		r16,' '
+			RJMP	RES_TO_STR_2_SAVE
+RES_TO_STR_2_NONZERO:
+			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
+RES_TO_STR_2_SAVE:
+			CLT
+			ST		Y+,r16		; сохранить код цифры
+			; Единицы
+			SUBI	r26,-0x30	; преобразовать цифру в ASCII код
+			ST		Y+,r26		; сохранить код цифры
+			
+			ldi		r16,'.'
+			ST		Y+,r16
+
+			; Переходим к дробной части
+			lds		r26,RES_OHM_FRAC+0
+			lds		r27,RES_OHM_FRAC+1
+
+
+			LDI		r16, -1
+RES_TO_STR_3:
+			INC		r16
+			SUBI	r26, Low(1000)
+			SBCI	r27, High(1000)
+			BRSH	RES_TO_STR_3
+			SUBI	r26, Low(-1000)
+			SBCI	r27, High(-1000)
+			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
+			ST		Y+,r16		; сохранить код цифры
+			LDI		r16, -1
+RES_TO_STR_4:
+			INC		r16
+			SUBI	r26, Low(100)
+			SBCI	r27, High(100)
+			BRSH	RES_TO_STR_4
+			SUBI	r26, -100
+			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
+			ST		Y+,r16		; сохранить код цифры
+			LDI		r16, -1
+RES_TO_STR_5:
+			INC		r16
+			SUBI	r26, 10
+			BRSH	RES_TO_STR_5
+			SUBI	r16,-0x30	; преобразовать цифру в ASCII код
+			ST		Y+,r16		; сохранить код цифры
+			CLR		r16
+			ST		Y+,r16		; \0 - null-terminating string
+			ret
+
+RES_TO_STR_BIG:
+			; Поместить в буфер строку "999.999"
+			ldi		ZH,high(2*OVER_RESISTANCE_str)
+			ldi		ZL,low(2*OVER_RESISTANCE_str)
+RES_TO_STR_BIG_LOOP:
+			lpm		r16,Z+
+			ST		Y+,r16
+			tst		r16
+			brne	RES_TO_STR_BIG_LOOP
+			ret
+
+RES_TO_STR_DASH:
+		; Поместить в буфер строку "---.---"
+			ldi		ZH,high(2*ZERO_CURRENT_str)
+			ldi		ZL,low(2*ZERO_CURRENT_str)
+RES_TO_STR_DASH_LOOP:
+			lpm		r16,Z+
+			ST		Y+,r16
+			tst		r16
+			brne	RES_TO_STR_DASH_LOOP
+			ret
+
+
+			
+
+
+OVER_RESISTANCE_str:	.db "999.999",0
+ZERO_CURRENT_str:		.db "---.---",0
+
+;------------------------------------------------------------------------------
+; End of file
+;------------------------------------------------------------------------------
