@@ -31,11 +31,11 @@ reti
 .org	OVF1addr	; Timer/Counter1 Overflow
 rjmp	OVF1_IRQ
 .org	OC0Aaddr	; Timer/Counter0 Compare Match A
-reti
+rjmp	TIM0_OC0A_HANDLER
 .org	OC0Baddr	; Timer/Counter0 Compare Match B
 reti
 .org	OVF0addr	; Timer/Counter0 Overflow
-rjmp	OVF0_IRQ
+reti
 .org	SPIaddr		; SPI Serial Transfer Complete
 reti
 .org	URXC0addr	; USART0, Rx Complete

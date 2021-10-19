@@ -1793,10 +1793,10 @@ IVC_TRACE_BTN_START_PRESS:
 ;------------------------------------------------------------------------------
 IVC_TRACE_START:
 			; ќтключаем таймер энкодера и кнопки
-			clr		r16
-			OutReg	TCCR0B,r16
+			;clr		r16
+			;OutReg	TCCR0B,r16
 			; наверное надо еще отключить таймер T1
-			cli
+			;cli
 			; сброс флага
 			;lds		r16,Flags
 			;andi	r16,~((1 << btn_long_press) | (1 << btn_press))
@@ -1943,12 +1943,12 @@ VAH_LOOP_END:
 			call	WaitMiliseconds		; использует регистры r16 и X
 			ldi		r16,250
 			call	WaitMiliseconds		; использует регистры r16 и X
-			sei
+			;sei
 			; ¬ключаем таймер T1
 			; .....
 			; ¬ключаем таймер энкодера и кнопки
-			ldi		r16,T0_Clock_Select
-			OutReg	TCCR0B,r16
+			;ldi		r16,T0_Clock_Select
+			;OutReg	TCCR0B,r16
 			ret
 
 

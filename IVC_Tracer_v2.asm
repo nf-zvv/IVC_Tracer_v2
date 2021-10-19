@@ -74,11 +74,11 @@
 ;-------------------------------------------
 ;                 Таймер T0                 |
 ;-------------------------------------------|
-; время до переполнения таймера в милисекундах
-#define period_T0 1
-#define T0_Clock_Select (1<<CS02)|(0<<CS01)|(0<<CS00)
-; вычисление начального значения
-#define start_count_T0 (0x100-(period_T0*F_CPU/(256*1000)))
+; время сработки таймера в милисекундах
+#define Period_T0 (1)
+; для режима CTC таймера
+; Предделитель 256
+#define CTC_OCR0A (Period_T0*F_CPU/(256*1000))
 
 ;-------------------------------------------
 ;                 Таймер T1                 |
@@ -208,21 +208,18 @@ rjmp	RESET
 .include "uart_irq.asm"
 
 ;------------------------------------------------------------------------------
-;           Прерывание таймера T0 по переполнению
+;           Прерывание таймера T0 по совпадению
+;          Timer/Counter0 Compare Match A Handler
 ;              Обслуживание энкодера и кнопки
-;             Переполнение таймера каждую 1 мс
+;             Прерывание таймера каждую 1 мс
 ;------------------------------------------------------------------------------
-OVF0_IRQ:
+TIM0_OC0A_HANDLER:
 			push	r16 
 			in		r16,SREG
 			push	r16
 			push	r17
 			push	r24
 			push	r25
-
-			; переинициализация таймера
-			ldi		r16,0x100-72  ;start_count_T0
-			OutReg	TCNT0,r16
 
 			;sbi		PORTB,1		; тестовый СД вкл.
 
@@ -238,7 +235,7 @@ OVF0_IRQ:
 			mov		r17,__enc_reg__	; загружаем последовательность состояний
 			andi	r17,0b00000011	; отделяем только последнее
 			cp		r17,r16 		; сравниваем
-			breq	OVF0_IRQ_EXIT	; не изменилось - выходим
+			breq	ENC_BTN_PRESS	; не изменилось - выходим
 
 			; если же состояние изменилось
 			lsl		__enc_reg__		; два раза
@@ -254,17 +251,17 @@ OVF0_IRQ:
 			ori		r16,(1<<enc_left_spin)
 			sts		Flags,r16
 			clr		__enc_reg__
-			rjmp	OVF0_IRQ_EXIT
+			rjmp	ENC_BTN_PRESS
 next_spin:
 			cpi		r17,0b11010010
-			brne	OVF0_IRQ_EXIT
+			brne	ENC_BTN_PRESS
 			;sbr 	Flags_2,(1<<enc_right_spin)		; установка флага
 			lds		r16,Flags
 			ori		r16,(1<<enc_right_spin)
 			sts		Flags,r16
 			clr		__enc_reg__
 			
-OVF0_IRQ_EXIT:
+ENC_BTN_PRESS:
 			;cbi		PORTB,1		; тестовый СД выкл.
 
 ;--------------------------- Обработка нажатия на кнопку ---------------------------
@@ -300,7 +297,7 @@ too_little_ticks:
 			;clr		r16
 			sts		ButtonCounter+0,__zero_reg__
 			sts		ButtonCounter+1,__zero_reg__
-			rjmp	ovf0_exit
+			rjmp	TIM0_OC0A_HANDLER_EXIT
 int1_low:
 			; если кнопка нажата (INT1=0), то ButtonCounter++
 			lds		r24,ButtonCounter+0
@@ -314,7 +311,7 @@ int1_low:
 			adiw	r24,1
 			sts		ButtonCounter+0,r24
 			sts		ButtonCounter+1,r25
-			rjmp	ovf0_exit
+			rjmp	TIM0_OC0A_HANDLER_EXIT
 long_button_press:
 			; устанавливаем флаг длинного нажатия 
 			; (удержание кнопки нажатой)
@@ -325,7 +322,7 @@ long_button_press:
 			; обнуляем ButtonCounter
 			sts		ButtonCounter+0,__zero_reg__
 			sts		ButtonCounter+1,__zero_reg__
-ovf0_exit:
+TIM0_OC0A_HANDLER_EXIT:
 			pop		r25
 			pop		r24
 			pop		r17
@@ -488,31 +485,23 @@ RESET:
 
 
 			;------------------------------------------------------------------
-			; Инициализация таймера Т0
+			; CTC Mode for T0
+			; Прерывание по совпадению каждую 1 мс
 			;------------------------------------------------------------------
-			; Переполнение таймера каждую 1 мс
-			; инициализация начального значения таймера
-			ldi		r16,0x100-72  ;start_count_T0
+			ldi		r16,0
 			OutReg	TCNT0,r16
-			#if defined (__ATmega328P__) || defined(__ATmega1284P__)
-					; разрешение прерывания таймера T0 по переполнению
-					InReg	r16,TIMSK0
-					ori		r16,(1<<TOIE0)
-					OutReg	TIMSK0,r16
-					; Настройка предделителя 64
-					ldi		r16,(1<<CS02)|(0<<CS01)|(0<<CS00)
-					OutReg	TCCR0B,r16
-			#elif defined (__ATmega16A__) || defined(__ATmega16__)
-					; разрешение прерывания таймера T0 по переполнению
-					InReg	r16,TIMSK
-					ori		r16,(1<<TOIE0)
-					OutReg	TIMSK,r16
-					; Настройка предделителя 64
-					ldi		r16,(1<<CS02)|(0<<CS01)|(0<<CS00)
-					OutReg	TCCR0,r16
-			#else
-			#error "Unsupported part:" __PART_NAME__
-			#endif // part specific code
+			; Настройка предделителя 256
+			ldi		r16,(1<<CS02)|(0<<CS01)|(0<<CS00)
+			OutReg	TCCR0B,r16
+			; CTC Mode: WGM2=00,WGM01=1,WGM00=0
+			ldi		r16,(1 << WGM01)
+			OutReg	TCCR0A,r16
+			; OCR0A = CTC_OCRA
+			ldi		r16,CTC_OCR0A
+			OutReg	OCR0A,r16
+			; Interrupt Timer/Counter0 Output Compare Match A
+			ldi		r16,(1 << OCIE0A)
+			OutReg	TIMSK0,r16
 			;------------------------------------------------------------------
 
 
