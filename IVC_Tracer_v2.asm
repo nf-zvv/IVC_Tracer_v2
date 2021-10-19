@@ -154,6 +154,10 @@ E_LIM_CURR_POS:		.dw Default_LIM_CURR_POS
 
 ;====================================DATA======================================
 .dseg
+SYS_TICK_MS:	.byte	4
+START_TIME:		.byte	4
+NOW:			.byte	4
+;------------------------
 ButtonCounter:	.byte	2	; количество тиков при нажатой кнопке энкодера
 Flags:			.byte	1	; 
 UART_Flags:		.byte	1	; флаги для UART
@@ -220,9 +224,25 @@ TIM0_OC0A_HANDLER:
 			push	r17
 			push	r24
 			push	r25
+			push	YL
+			push	YH
 
-			;sbi		PORTB,1		; тестовый СД вкл.
-
+;----------------------- Increase system uptime by 1 ms -----------------------
+			ldi		YL,low(SYS_TICK_MS)
+			ldi		YH,high(SYS_TICK_MS)
+			ld		r24,Y             ; get lower 16 bit
+			ldd		r25,Y+1
+			adiw	r24,1             ; add 1
+			st		Y+,r24            ; write back to mem
+			st		Y+,r25
+			brcc	TIM0_OC0A_HANDLER_NEXT
+			ld		r24,Y             ; get higher 16 bit
+			ldd		r25,Y+1
+			adiw	r24,1             ; add 1
+			st		Y+,r25            ; write back to mem
+			st		Y+,r24
+TIM0_OC0A_HANDLER_NEXT:
+;---------------------------- Encoder rotate event ----------------------------
 			; поучение текущего состояния энкодера
 			in		r16,ENC_PIN
 			andi	r16,(1<<ENC_A)|(1<<ENC_B)
@@ -262,9 +282,7 @@ next_spin:
 			clr		__enc_reg__
 			
 ENC_BTN_PRESS:
-			;cbi		PORTB,1		; тестовый СД выкл.
-
-;--------------------------- Обработка нажатия на кнопку ---------------------------
+;------------------------- Encoder button press event -------------------------
 			;sbis	BUTTON_PIN,BUTTON	; считываем состояние кнопки
 			sbis	ENC_PIN,ENC_Btn
 			rjmp	int1_low	; если кнопка нажата, переходим на int1_low
@@ -323,6 +341,8 @@ long_button_press:
 			sts		ButtonCounter+0,__zero_reg__
 			sts		ButtonCounter+1,__zero_reg__
 TIM0_OC0A_HANDLER_EXIT:
+			pop		YH
+			pop		YL
 			pop		r25
 			pop		r24
 			pop		r17
